@@ -1,0 +1,280 @@
+@import 'tailwindcss';
+@import 'leaflet/dist/leaflet.css';
+
+/**
+ * Tipografías autoalojadas (npm run fonts). Sin CDN: la app no depende de un
+ * tercero para renderizar y no se filtra la IP de cada visitante.
+ * Subconjunto `latin`, suficiente para el castellano y los nombres de región.
+ */
+@font-face {
+  font-family: 'Archivo';
+  src: url('../assets/fonts/archivo-variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-stretch: 62% 125%; /* el "Expanded" del sistema de diseño es el eje wdth */
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('../assets/fonts/inter-variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('../assets/fonts/plex-mono-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('../assets/fonts/plex-mono-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/**
+ * Tokens de DESIGN_SYSTEM.md. Tailwind 4 configura el tema desde CSS (@theme),
+ * no desde tailwind.config.js. Todo color o tipografía de la interfaz sale de aquí:
+ * no escribir hex sueltos en los componentes.
+ */
+@theme {
+  /* Señalética viaria española */
+  --color-base: #f6f5f1; /* blanco carretera envejecido */
+  --color-ink: #1b211d; /* asfalto */
+  --color-autovia: #0a6847; /* verde autovía, acento primario */
+  --color-panel: #0f4c8a; /* azul panel informativo, navegación */
+  --color-atencion: #e8a33d; /* ámbar, filtro activo y hover */
+  --color-asfalto: #9ca39d; /* gris neutro, bordes y texto secundario */
+
+  /* Escala coroplética: base -> autovía, 5 pasos.
+     Cada paso lleva además trama y cifra visible (accesibilidad). */
+  --color-mapa-1: #dce5dc;
+  --color-mapa-2: #b4cdb8;
+  --color-mapa-3: #7fae8e;
+  --color-mapa-4: #438a66;
+  --color-mapa-5: #0a6847;
+  --color-mapa-0: #e7e7e1; /* sin empresas que cumplan el filtro */
+
+  --font-display: 'Archivo', system-ui, sans-serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* Escala de DESIGN_SYSTEM.md: caption / body-sm / body / label-lg / heading / display */
+  --text-caption: 0.75rem;
+  --text-body-sm: 0.875rem;
+  --text-body: 1rem;
+  --text-label-lg: 1.25rem;
+  --text-heading: 1.75rem;
+  --text-display: 2.5rem;
+
+  /* Tiempos de DESIGN_SYSTEM.md */
+  --animate-duration-mapa: 400ms; /* flyTo/fitBounds */
+  --animate-duration-coropleta: 200ms; /* cambio de umbral */
+  --animate-duration-panel: 250ms; /* panel lateral / bottom sheet */
+  --animate-duration-trazado: 600ms; /* trazado de ruta del borde */
+}
+
+/**
+ * Rótulo de señal: Archivo con el eje de ancho abierto. Reservado al nombre de la
+ * región activa y al título de cabecera — usado en más sitios pierde el efecto.
+ */
+@utility rotulo {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-stretch: 112%;
+  letter-spacing: -0.01em;
+}
+
+html {
+  background: var(--color-base);
+  color: var(--color-ink);
+}
+
+/* ---------------------------------------------------------------- Mapa --- */
+
+/* Sin teselas: el "mar" es el fondo de la propia interfaz. */
+.leaflet-container {
+  background: var(--color-base);
+  font-family: var(--font-sans);
+}
+
+/* El relleno lo escribe Leaflet en el atributo `fill`; aquí solo se anima
+   para que el cambio de umbral se sienta continuo y no un parpadeo. */
+.region {
+  transition: fill var(--animate-duration-coropleta) ease;
+}
+
+/* Cifra permanente sobre cada región: la coropleta no puede depender solo del
+   color. Se ancla en el punto interior que calcula process-geojson.js. */
+.etiqueta-region {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.05rem;
+  line-height: 1.1;
+  white-space: nowrap;
+  text-align: center;
+  text-rendering: optimizeLegibility;
+  pointer-events: none; /* el rótulo no debe robarle el arrastre al mapa */
+  /* Cerco del color de la propia región: los nombres que se salen al mar
+     (C. Valenciana, Cantabria) siguen legibles sin recuadro ni sombra. */
+  text-shadow:
+    0 0 2px var(--halo),
+    0 0 2px var(--halo),
+    0 0 3px var(--halo);
+}
+/* Ceuta y Melilla: el rótulo va al lado del punto, no encima. */
+.etiqueta-region.micro {
+  transform: translate(0.5rem, -50%);
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+.etiqueta-region .nombre {
+  font-size: 0.5625rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+.etiqueta-region .cifra {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Elemento de firma: el borde de la provincia elegida se dibuja como una ruta.
+   La animación la lleva RouteTraceOverlay; aquí solo vive el color. */
+.trazado {
+  stroke: var(--color-atencion);
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* Carga inicial: la silueta del país se traza una vez sobre la línea punteada
+   que hace de guía, y se disuelve al llegar los datos (LoadingSilhouette). */
+.silueta-guia,
+.silueta-trazo {
+  fill: none;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.silueta-guia {
+  stroke: var(--color-asfalto);
+}
+.silueta-trazo {
+  stroke: var(--color-ink);
+}
+
+/* Recuadro del inset canario. */
+.cartela {
+  stroke: var(--color-asfalto);
+}
+.nota-cartela {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  padding: 0.25rem 0 0 0.375rem;
+  font-size: 0.5625rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-asfalto);
+  white-space: nowrap;
+}
+
+/* Controles de Leaflet con los tokens del sistema: cuadrados, sin sombra. */
+.leaflet-control-zoom {
+  border: 1px solid var(--color-asfalto) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.leaflet-control-zoom a {
+  border-radius: 0 !important;
+  background: var(--color-base);
+  color: var(--color-ink);
+  border-bottom-color: var(--color-asfalto);
+}
+.leaflet-control-zoom a:hover {
+  background: #fff;
+  color: var(--color-autovia);
+}
+
+/* ------------------------------------------------------------- Filtros --- */
+
+/**
+ * Slider de umbral. Va a mano y no con utilidades: `appearance: none` borra
+ * también el pulgar en Chromium, así que hay que redibujar pista y pulgar en
+ * los dos motores. Cuadrado y sin sombra, como el resto de controles.
+ */
+.slider-umbral {
+  appearance: none;
+  height: 1.25rem; /* área de pulsación cómoda; la pista visible son 2 px */
+  background: transparent;
+  cursor: pointer;
+}
+.slider-umbral::-webkit-slider-runnable-track {
+  height: 2px;
+  background: color-mix(in srgb, var(--color-asfalto) 60%, transparent);
+}
+.slider-umbral::-moz-range-track {
+  height: 2px;
+  background: color-mix(in srgb, var(--color-asfalto) 60%, transparent);
+}
+.slider-umbral::-webkit-slider-thumb {
+  appearance: none;
+  width: 0.5rem;
+  height: 1rem;
+  margin-top: -7px; /* centra el pulgar sobre la pista */
+  border: 0;
+  border-radius: 0;
+  background: var(--color-autovia);
+}
+.slider-umbral::-moz-range-thumb {
+  width: 0.5rem;
+  height: 1rem;
+  border: 0;
+  border-radius: 0;
+  background: var(--color-autovia);
+}
+.slider-umbral:active::-webkit-slider-thumb {
+  background: var(--color-atencion); /* ámbar: filtro en uso */
+}
+.slider-umbral:active::-moz-range-thumb {
+  background: var(--color-atencion);
+}
+
+/**
+ * Foco de teclado visible en todos los controles (azul panel informativo).
+ *
+ * Va en `@layer base` a propósito: las reglas sin capa ganan a las utilidades
+ * de Tailwind pase lo que pase con la especificidad, y entonces ningún control
+ * podría cambiarse el anillo. El asa de la hoja lo necesita —a lo ancho de la
+ * pantalla el rectángulo se sale por los lados y no se lee como un foco.
+ */
+@layer base {
+  :where(a, button, input, select, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-panel);
+    outline-offset: 2px;
+  }
+}
+
+/* El trazado de ruta es el único momento animado con protagonismo;
+   sin él, la selección debe seguir siendo evidente. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "_documentacion": {
+    "que_es": "Flota real consultada a mano en el REAT del Ministerio de Transportes (apps.fomento.gob.es/crgt). Es la única fuente con nº de vehículos por empresa en España y no permite exportación masiva ni API, así que este fichero se amplía manualmente.",
+    "como_se_usa": "El script scripts/process-sabi-export.js cruza estos registros con el Excel de SABI por NIF. Cada coincidencia pasa a flota.tipo = 'verificada'; el resto del dataset queda como 'estimada' (empleados de SABI) o 'sin_dato'.",
+    "campos": {
+      "nif": "NIF tal como aparece en SABI, en mayúsculas y sin espacios.",
+      "vehiculos": "Nº de vehículos autorizados según el REAT. Entero.",
+      "fecha_consulta": "AAAA-MM en que se consultó el REAT. Determina si el dato sigue vigente.",
+      "observaciones": "Opcional. Notas libres, no se publica en la interfaz."
+    },
+    "aviso": "No inventar registros. Si no se ha consultado el REAT para una empresa, no debe aparecer aquí."
+  },
+  "registros": []
+}

@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.vite/
+*.local
+.DS_Store
+
+# El export de SABI son 15 MB y no se versiona: el JSON generado sí
+# (public/data/companies.json), porque el build de Vercel no ejecuta el script.
+data-source/*.xls
+data-source/*.xlsx
