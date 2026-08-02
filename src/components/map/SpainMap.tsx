@@ -15,6 +15,7 @@ import {
 import type { CortesCoropleta } from '../../utils/choroplethScale';
 import { ChoroplethLayer } from './ChoroplethLayer';
 import { LoadingSilhouette } from './LoadingSilhouette';
+import { RelieveLayer } from './RelieveLayer';
 import { RouteTraceOverlay } from './RouteTraceOverlay';
 
 const LIMITES = limitesDe(CCAA_GEO);
@@ -112,6 +113,8 @@ export function SpainMap({
       className="h-full w-full"
     >
       <Encuadre clave={clave} limites={objetivo} onFin={alEncuadrar} />
+
+      <RelieveLayer />
 
       <ChoroplethLayer
         regiones={CCAA_GEO}
