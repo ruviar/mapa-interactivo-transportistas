@@ -65,7 +65,15 @@ export function ChoroplethLayer({ regiones, recuentos, cortes, modo, onSeleccion
     return (paso: PasoCoropleta): PathOptions =>
       modo === 'contexto'
         ? { className: 'region', fillColor: paleta.relleno[0], fillOpacity: 0.55, color: paleta.borde, weight: 0.6, opacity: 0.25 }
-        : { className: 'region', fillColor: paleta.relleno[paso], fillOpacity: 1, color: paleta.borde, weight: 0.8, opacity: 0.5 };
+        : // 0.8 y no 1: dejar un resquicio para que el hillshade de RelieveLayer
+          // se lea a través del relleno (mix-blend-mode no cruza del <img> al
+          // <svg> de Leaflet -- son elementos separados en el mismo pane, y
+          // un blend-mode en el path no ve nada al otro lado). Con opacidad
+          // completa el relieve quedaba tapado del todo; con un resquicio
+          // menor del 20% no había suficiente margen para que se notara sin
+          // exigirle un contraste tan alto a la imagen que se disparaba en
+          // las regiones de contexto (fill-opacity 0.55, bastante más laxo).
+          { className: 'region', fillColor: paleta.relleno[paso], fillOpacity: 0.8, color: paleta.borde, weight: 0.8, opacity: 0.5 };
   }, [modo, paleta]);
 
   // `style` solo se evalúa al crear las capas; al cambiar el umbral o el nivel
