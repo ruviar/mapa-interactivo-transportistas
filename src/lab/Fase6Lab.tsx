@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 // mayúsculas (Windows), './Odometro' sin extensión colisiona con 'odometro.ts'
 // y tsc resuelve al módulo equivocado. Con la extensión puesta no hay ambigüedad.
 import { Odometro } from '../animation/Odometro.tsx';
+import { Pulsable } from '../animation/Pulsable';
 
 export function Fase6Lab() {
   const [valor, setValor] = useState(42839);
@@ -56,6 +57,35 @@ export function Fase6Lab() {
             className="slider-umbral mt-1 w-full"
           />
         </label>
+      </Banco>
+
+      <Banco titulo="Pulsación física">
+        <ul className="max-w-md border-y border-asfalto/25">
+          {['Cataluña', 'Andalucía', 'Comunidad de Madrid'].map((nombre) => (
+            <li key={nombre}>
+              <Pulsable
+                elevado
+                type="button"
+                className="flex w-full items-baseline justify-between gap-3 border-b border-asfalto/25 bg-base px-4 py-2.5 text-left last:border-b-0"
+              >
+                <span className="truncate text-body-sm">{nombre}</span>
+                <span className="font-mono text-body-sm tabular-nums text-asfalto">1.234</span>
+              </Pulsable>
+            </li>
+          ))}
+        </ul>
+
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <Pulsable
+            type="button"
+            className="text-caption text-panel underline-offset-2 hover:underline"
+          >
+            Control plano (breadcrumb)
+          </Pulsable>
+          <Pulsable type="button" className="text-caption text-asfalto hover:text-ink">
+            Cabecera de orden
+          </Pulsable>
+        </div>
       </Banco>
     </div>
   );

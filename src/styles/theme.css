@@ -76,6 +76,13 @@
   --animate-duration-coropleta: 200ms; /* cambio de umbral */
   --animate-duration-panel: 250ms; /* panel lateral / bottom sheet */
   --animate-duration-trazado: 600ms; /* trazado de ruta del borde */
+
+  /* Elevación (Fase 6). Tres alturas y ninguna más: apoyado en la mesa,
+     levantado por el cursor, y en la mano (la hoja mientras se arrastra).
+     En rgba() literal: Motion no interpola entre dos color-mix(). */
+  --shadow-apoyo: 0 1px 2px -1px rgba(27, 33, 29, 0.16);
+  --shadow-alta: 0 4px 12px -5px rgba(27, 33, 29, 0.42);
+  --shadow-mano: 0 -8px 26px -12px rgba(27, 33, 29, 0.55);
 }
 
 /**
