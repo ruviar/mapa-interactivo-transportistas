@@ -49,11 +49,13 @@
   --color-panel: #0f4c8a; /* azul panel informativo, navegación */
   --color-atencion: #e8a33d; /* ámbar, filtro activo y hover */
   --color-asfalto: #9ca39d; /* gris neutro, bordes y texto secundario */
-  /* Mar de carta náutica: el azul de panel informativo muy rebajado, para que
-     el agua entre en la misma familia y no sea un azul traído de fuera. Pálido
-     a propósito: por encima le caen los cinco verdes de la coropleta y el ámbar
-     de la selección, y el mar no puede competir con ninguno de los dos. */
-  --color-mar: #c9d9e4;
+  /* Mar de carta náutica: el azul de panel informativo (#0f4c8a) rebajado sobre
+     blanco, para que el agua entre en la misma familia y no sea un azul traído
+     de fuera. Al 40%: por debajo de eso el agua se lee como gris y el contorno
+     de la península solo lo sostiene el borde; por encima, empieza a disputarle
+     el sitio a los cinco verdes de la coropleta y al ámbar de la selección.
+     La tinta sobre el mar mantiene 8:1 de contraste. */
+  --color-mar: #9fb7d0;
 
   /* Escala coroplética: base -> autovía, 5 pasos.
      Cada paso lleva además trama y cifra visible (accesibilidad). */
