@@ -1,19 +1,75 @@
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 
-/**
- * Banco de pruebas de la Fase 6. Se abre con `?lab` y sirve para acordar la
- * sensación de cada pieza antes de repartirla por la interfaz.
- *
- * Se borra entero al cerrar la fase: este archivo y tres líneas de main.tsx.
- */
+// Extensión explícita a propósito: en un sistema de archivos que no distingue
+// mayúsculas (Windows), './Odometro' sin extensión colisiona con 'odometro.ts'
+// y tsc resuelve al módulo equivocado. Con la extensión puesta no hay ambigüedad.
+import { Odometro } from '../animation/Odometro.tsx';
+
 export function Fase6Lab() {
+  const [valor, setValor] = useState(42839);
+
   return (
     <div className="min-h-dvh bg-base p-8 font-sans text-ink">
       <h1 className="rotulo text-heading">Banco · Fase 6</h1>
       <p className="mt-1 text-body-sm text-asfalto">
         Piezas sueltas para acordar la sensación. No es la aplicación.
       </p>
+
+      <Banco titulo="Odómetro · las dos mecánicas">
+        <div className="flex flex-wrap items-end gap-10">
+          <div>
+            <p className="text-caption text-asfalto">Rueda real</p>
+            <Odometro
+              valor={valor}
+              mecanica="rueda"
+              className="font-mono text-display font-medium"
+            />
+          </div>
+          <div>
+            <p className="text-caption text-asfalto">Por columna</p>
+            <Odometro
+              valor={valor}
+              mecanica="columna"
+              className="font-mono text-display font-medium"
+            />
+          </div>
+        </div>
+
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <Boton onClick={() => setValor((v) => v + 7)}>+7</Boton>
+          <Boton onClick={() => setValor((v) => Math.max(0, v - 348))}>−348</Boton>
+          <Boton onClick={() => setValor(3120)}>Salto grande (3.120)</Boton>
+          <Boton onClick={() => setValor(42839)}>Volver (42.839)</Boton>
+          <Boton onClick={() => setValor(999)}>999 → prueba de dígito nuevo</Boton>
+        </div>
+
+        {/* Imita el slider de umbral: el valor cambia en cada píxel del gesto. */}
+        <label className="mt-5 block max-w-md">
+          <span className="text-caption text-asfalto">Barrido continuo (como el umbral)</span>
+          <input
+            type="range"
+            min={0}
+            max={45000}
+            value={valor}
+            onChange={(e) => setValor(Number(e.target.value))}
+            className="slider-umbral mt-1 w-full"
+          />
+        </label>
+      </Banco>
     </div>
+  );
+}
+
+function Boton({ onClick, children }: { onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="border border-asfalto px-3 py-1.5 text-body-sm hover:bg-atencion/12"
+    >
+      {children}
+    </button>
   );
 }
 
