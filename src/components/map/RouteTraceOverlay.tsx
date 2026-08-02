@@ -1,12 +1,15 @@
+import { animate } from 'motion/react';
 import type { Polygon as CapaPoligono } from 'leaflet';
 import { useEffect, useRef, useState } from 'react';
 import { Polygon, useMap } from 'react-leaflet';
 
+import { RESORTE_TRAZADO } from '../../animation/resortes';
 import type { FeatureRegion } from '../../types/geo';
 import { anillosDe } from '../../utils/cartografia';
 
-/** Coincide con `--animate-duration-trazado` de theme.css. */
-const DURACION = 600;
+/** Grosor en reposo del trazo, y el pulso con el que se asienta. */
+const GROSOR = 2.5;
+const GROSOR_PULSO = 2.9;
 /** Por encima de las capas de regiones (400) y por debajo de los rótulos (600). */
 const PANEL = 'trazado';
 
@@ -43,20 +46,40 @@ export function RouteTraceOverlay({ feature }: { feature: FeatureRegion }) {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const largo = path.getTotalLength();
-    path.style.transition = 'none';
     path.style.strokeDasharray = String(largo);
     path.style.strokeDashoffset = String(largo);
-    void path.getBoundingClientRect(); // fuerza el reflujo antes de animar
 
-    path.style.transition = `stroke-dashoffset ${DURACION}ms cubic-bezier(0.4, 0, 0.2, 1)`;
-    path.style.strokeDashoffset = '0';
+    // El muelle mueve un progreso, no el offset. Acotado en 1: el sobrepaso se
+    // come contra el tope —la punta llega al cierre y se para en seco— y lo que
+    // se ve del rebote es el retroceso siguiente, en la cabeza del trazo. Un
+    // muelle sobre el offset a pelo dejaría el hueco en el arranque de la
+    // línea, que se lee como un fallo de dibujo y no como peso.
+    const trazo = animate(0, 1, {
+      ...RESORTE_TRAZADO,
+      onUpdate: (p) => {
+        path.style.strokeDashoffset = String(largo * (1 - Math.min(1, p)));
+      },
+    });
 
-    const fin = window.setTimeout(() => {
-      path.style.transition = '';
+    // El peso de la línea al detenerse: engorda y vuelve.
+    const pulso = animate(
+      path,
+      { strokeWidth: [GROSOR, GROSOR_PULSO, GROSOR] },
+      { duration: 0.34, delay: 0.28, ease: 'easeOut' },
+    );
+
+    void trazo.finished.then(() => {
+      // Sin dasharray el borde vuelve a ser una línea continua normal: si el
+      // usuario hace zoom después, no se queda un rastro de guiones descuadrados.
       path.style.strokeDasharray = '';
-    }, DURACION);
+      path.style.strokeDashoffset = '';
+    });
 
-    return () => window.clearTimeout(fin);
+    return () => {
+      trazo.stop();
+      pulso.stop();
+      path.style.strokeWidth = '';
+    };
   }, [panelListo]);
 
   if (!panelListo) return null;
