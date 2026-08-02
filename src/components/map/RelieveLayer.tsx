@@ -9,10 +9,14 @@ const PENINSULA_BOUNDS: Limites = [
   [44.18727, 4.72779],
 ];
 
-/** Mismo rectángulo que la cartela: la imagen ya está generada en esas coordenadas reales. */
+/**
+ * La imagen se generó con el DEM real de Canarias (para que el relieve sea
+ * correcto), pero el GeoJSON dibuja las islas trasladadas a esta cartela, no
+ * en su posición geográfica real -- hay que anclar aquí, no en el bbox real.
+ */
 const CANARIAS_BOUNDS: Limites = [
-  [27.13954, -18.66029],
-  [29.79077, -12.91948],
+  [34.8, -13.5],
+  [37.45123, -7.75919],
 ];
 
 /**

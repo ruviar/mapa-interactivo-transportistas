@@ -123,15 +123,6 @@ html {
   transition: fill var(--animate-duration-coropleta) ease;
 }
 
-/* Hillshade estático (Bloque B, Fase 7): textura de fondo bajo la coropleta,
-   nunca protagonista. `multiply` deja pasar el verde de la escala tal cual
-   sobre el gris claro y solo oscurece un poco los pasos más claros; con
-   `normal` el gris tapaba el `--color-mapa-0` casi entero. */
-.capa-relieve {
-  opacity: 0.5;
-  mix-blend-mode: multiply;
-}
-
 /* Cifra permanente sobre cada región: la coropleta no puede depender solo del
    color. Se ancla en el punto interior que calcula process-geojson.js. */
 .etiqueta-region {

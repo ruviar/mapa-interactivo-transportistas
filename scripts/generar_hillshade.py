@@ -78,7 +78,7 @@ def cargar_mascaras():
     return peninsula_mascara, canarias_mascara
 
 
-def procesar(nombre, lon_min, lat_min, lon_max, lat_max, margen, mascara_geom):
+def procesar(nombre, lon_min, lat_min, lon_max, lat_max, margen, mascara_geom, desplazamiento=(0, 0)):
     lon_min -= margen
     lat_min -= margen
     lon_max += margen
@@ -108,11 +108,13 @@ def procesar(nombre, lon_min, lat_min, lon_max, lat_max, margen, mascara_geom):
 
     sombra = hillshade(z, cellsize_x_m, cellsize_y_m)
 
-    # Contraste bajo, a propósito: textura de fondo discreta bajo la
-    # coropleta, no un relieve protagonista. Comprime el rango hacia el gris
-    # medio en vez de usar 0-255 completo.
-    gris = 130 + (sombra - sombra.mean()) * 70
-    gris = np.clip(gris, 60, 210).astype(np.uint8)
+    # La coropleta se pinta encima con `fill-opacity: 0.8` (ChoroplethLayer.tsx)
+    # -- ese 20% de resquicio es todo lo que tiene este gris para notarse, así
+    # que pide más contraste que un hillshade "normal". `contexto` (0.55) usa
+    # la misma imagen con más resquicio: con este rango ya se nota bastante
+    # ahí, así que no hace falta forzar más el de `coropleta`.
+    gris = 150 + (sombra - sombra.mean()) * 62
+    gris = np.clip(gris, 88, 212).astype(np.uint8)
 
     # Buffer pequeño + difuminado del borde: el polígono de la coropleta no
     # coincide pixel a pixel con esta máscara, y un corte binario duro se
@@ -133,8 +135,16 @@ def procesar(nombre, lon_min, lat_min, lon_max, lat_max, margen, mascara_geom):
     salida = f"src/assets/relieve/{nombre}.webp"
     img.save(salida, format="WEBP", quality=80, method=6)
     print(f"[{nombre}] guardado {salida} ({img.width}x{img.height})")
-    print(f"[{nombre}] bounds_leaflet=[[{lat_min},{lon_min}],[{lat_max},{lon_max}]]")
-    return (lon_min, lat_min, lon_max, lat_max)
+
+    # El mapa no dibuja Canarias en su posición real -- la cartela ya viene
+    # trasladada en el propio GeoJSON. La imagen se generó con datos reales
+    # (para que el DEM sea correcto) pero hay que anclarla en Leaflet en las
+    # coordenadas trasladadas, o queda fuera de donde caen los polígonos.
+    dlon, dlat = desplazamiento
+    lat_min_l, lon_min_l = lat_min + dlat, lon_min + dlon
+    lat_max_l, lon_max_l = lat_max + dlat, lon_max + dlon
+    print(f"[{nombre}] bounds_leaflet=[[{lat_min_l},{lon_min_l}],[{lat_max_l},{lon_max_l}]]")
+    return (lon_min_l, lat_min_l, lon_max_l, lat_max_l)
 
 
 if __name__ == "__main__":
@@ -150,11 +160,15 @@ if __name__ == "__main__":
         margen=0.4,
         mascara_geom=mascara_peninsula,
     )
+    with open("src/data/ccaa.geojson", encoding="utf-8") as f:
+        desplazamiento = tuple(json.load(f)["canarias"]["desplazamiento"])
+
     canarias = procesar(
         "canarias",
         -18.51029, 27.28954, -13.06948, 29.64077,
         margen=0.15,
         mascara_geom=mascara_canarias,
+        desplazamiento=desplazamiento,
     )
 
     print("\n=== RESUMEN ===")
