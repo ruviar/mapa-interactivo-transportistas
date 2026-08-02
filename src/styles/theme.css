@@ -75,7 +75,8 @@
   --animate-duration-mapa: 400ms; /* flyTo/fitBounds */
   --animate-duration-coropleta: 200ms; /* cambio de umbral */
   --animate-duration-panel: 250ms; /* panel lateral / bottom sheet */
-  --animate-duration-trazado: 600ms; /* trazado de ruta del borde */
+  /* El trazado de firma ya no tiene duración fija: lo gobierna RESORTE_TRAZADO
+     en src/animation/resortes.ts, porque un muelle no se mide en milisegundos. */
 
   /* Elevación (Fase 6). Tres alturas y ninguna más: apoyado en la mesa,
      levantado por el cursor, y en la mano (la hoja mientras se arrastra).
