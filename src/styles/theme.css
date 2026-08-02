@@ -49,6 +49,11 @@
   --color-panel: #0f4c8a; /* azul panel informativo, navegación */
   --color-atencion: #e8a33d; /* ámbar, filtro activo y hover */
   --color-asfalto: #9ca39d; /* gris neutro, bordes y texto secundario */
+  /* Mar de carta náutica: el azul de panel informativo muy rebajado, para que
+     el agua entre en la misma familia y no sea un azul traído de fuera. Pálido
+     a propósito: por encima le caen los cinco verdes de la coropleta y el ámbar
+     de la selección, y el mar no puede competir con ninguno de los dos. */
+  --color-mar: #c9d9e4;
 
   /* Escala coroplética: base -> autovía, 5 pasos.
      Cada paso lleva además trama y cifra visible (accesibilidad). */
@@ -96,9 +101,9 @@ html {
 
 /* ---------------------------------------------------------------- Mapa --- */
 
-/* Sin teselas: el "mar" es el fondo de la propia interfaz. */
+/* Sin teselas: el "mar" es el fondo del propio contenedor del mapa. */
 .leaflet-container {
-  background: var(--color-base);
+  background: var(--color-mar);
   font-family: var(--font-sans);
 }
 

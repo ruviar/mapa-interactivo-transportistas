@@ -38,7 +38,7 @@ export interface Paleta {
   cifra: Record<PasoCoropleta, string>;
   /** Trazo de los límites: tinta, rebajada con opacidad por el propio Leaflet. */
   borde: string;
-  /** Fondo de la interfaz, que en el mapa hace de mar. */
+  /** El mar: fondo del mapa y cerco de los rótulos que caen sobre el agua. */
   fondo: string;
   /** Ámbar: hover y selección. */
   atencion: string;
@@ -62,7 +62,7 @@ export function leerPaleta(): Paleta {
     relleno: mapear(VAR_PASO),
     cifra: mapear(VAR_CIFRA),
     borde: valor('--color-ink'),
-    fondo: valor('--color-base'),
+    fondo: valor('--color-mar'),
     atencion: valor('--color-atencion'),
   };
 }
