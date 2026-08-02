@@ -1,0 +1,484 @@
+{
+  "ccaa": [
+    {
+      "cod": "10",
+      "nombre": "Comunitat Valenciana",
+      "provincias": [
+        "03",
+        "12",
+        "46"
+      ]
+    },
+    {
+      "cod": "11",
+      "nombre": "Extremadura",
+      "provincias": [
+        "06",
+        "10"
+      ]
+    },
+    {
+      "cod": "12",
+      "nombre": "Galicia",
+      "provincias": [
+        "15",
+        "27",
+        "32",
+        "36"
+      ]
+    },
+    {
+      "cod": "13",
+      "nombre": "Comunidad de Madrid",
+      "provincias": [
+        "28"
+      ]
+    },
+    {
+      "cod": "14",
+      "nombre": "Región de Murcia",
+      "provincias": [
+        "30"
+      ]
+    },
+    {
+      "cod": "15",
+      "nombre": "Comunidad Foral de Navarra",
+      "provincias": [
+        "31"
+      ]
+    },
+    {
+      "cod": "16",
+      "nombre": "País Vasco",
+      "provincias": [
+        "01",
+        "20",
+        "48"
+      ]
+    },
+    {
+      "cod": "17",
+      "nombre": "La Rioja",
+      "provincias": [
+        "26"
+      ]
+    },
+    {
+      "cod": "18",
+      "nombre": "Ceuta",
+      "provincias": [
+        "51"
+      ]
+    },
+    {
+      "cod": "19",
+      "nombre": "Melilla",
+      "provincias": [
+        "52"
+      ]
+    },
+    {
+      "cod": "01",
+      "nombre": "Andalucía",
+      "provincias": [
+        "04",
+        "11",
+        "14",
+        "18",
+        "21",
+        "23",
+        "29",
+        "41"
+      ]
+    },
+    {
+      "cod": "02",
+      "nombre": "Aragón",
+      "provincias": [
+        "22",
+        "44",
+        "50"
+      ]
+    },
+    {
+      "cod": "03",
+      "nombre": "Principado de Asturias",
+      "provincias": [
+        "33"
+      ]
+    },
+    {
+      "cod": "04",
+      "nombre": "Illes Balears",
+      "provincias": [
+        "07"
+      ]
+    },
+    {
+      "cod": "05",
+      "nombre": "Canarias",
+      "provincias": [
+        "35",
+        "38"
+      ]
+    },
+    {
+      "cod": "06",
+      "nombre": "Cantabria",
+      "provincias": [
+        "39"
+      ]
+    },
+    {
+      "cod": "07",
+      "nombre": "Castilla y León",
+      "provincias": [
+        "05",
+        "09",
+        "24",
+        "34",
+        "37",
+        "40",
+        "42",
+        "47",
+        "49"
+      ]
+    },
+    {
+      "cod": "08",
+      "nombre": "Castilla-La Mancha",
+      "provincias": [
+        "02",
+        "13",
+        "16",
+        "19",
+        "45"
+      ]
+    },
+    {
+      "cod": "09",
+      "nombre": "Cataluña",
+      "provincias": [
+        "08",
+        "17",
+        "25",
+        "43"
+      ]
+    }
+  ],
+  "provincias": [
+    {
+      "cod": "01",
+      "nombre": "Araba/Álava",
+      "ccaa": "16",
+      "total": 237
+    },
+    {
+      "cod": "02",
+      "nombre": "Albacete",
+      "ccaa": "08",
+      "total": 688
+    },
+    {
+      "cod": "03",
+      "nombre": "Alicante/Alacant",
+      "ccaa": "10",
+      "total": 1323
+    },
+    {
+      "cod": "04",
+      "nombre": "Almería",
+      "ccaa": "01",
+      "total": 1460
+    },
+    {
+      "cod": "05",
+      "nombre": "Ávila",
+      "ccaa": "07",
+      "total": 157
+    },
+    {
+      "cod": "06",
+      "nombre": "Badajoz",
+      "ccaa": "11",
+      "total": 703
+    },
+    {
+      "cod": "07",
+      "nombre": "Illes Balears",
+      "ccaa": "04",
+      "total": 788
+    },
+    {
+      "cod": "08",
+      "nombre": "Barcelona",
+      "ccaa": "09",
+      "total": 4246
+    },
+    {
+      "cod": "09",
+      "nombre": "Burgos",
+      "ccaa": "07",
+      "total": 455
+    },
+    {
+      "cod": "10",
+      "nombre": "Cáceres",
+      "ccaa": "11",
+      "total": 298
+    },
+    {
+      "cod": "11",
+      "nombre": "Cádiz",
+      "ccaa": "01",
+      "total": 710
+    },
+    {
+      "cod": "12",
+      "nombre": "Castellón/Castelló",
+      "ccaa": "10",
+      "total": 703
+    },
+    {
+      "cod": "13",
+      "nombre": "Ciudad Real",
+      "ccaa": "08",
+      "total": 616
+    },
+    {
+      "cod": "14",
+      "nombre": "Córdoba",
+      "ccaa": "01",
+      "total": 730
+    },
+    {
+      "cod": "15",
+      "nombre": "A Coruña",
+      "ccaa": "12",
+      "total": 1097
+    },
+    {
+      "cod": "16",
+      "nombre": "Cuenca",
+      "ccaa": "08",
+      "total": 403
+    },
+    {
+      "cod": "17",
+      "nombre": "Girona",
+      "ccaa": "09",
+      "total": 814
+    },
+    {
+      "cod": "18",
+      "nombre": "Granada",
+      "ccaa": "01",
+      "total": 835
+    },
+    {
+      "cod": "19",
+      "nombre": "Guadalajara",
+      "ccaa": "08",
+      "total": 263
+    },
+    {
+      "cod": "20",
+      "nombre": "Gipuzkoa",
+      "ccaa": "16",
+      "total": 647
+    },
+    {
+      "cod": "21",
+      "nombre": "Huelva",
+      "ccaa": "01",
+      "total": 427
+    },
+    {
+      "cod": "22",
+      "nombre": "Huesca",
+      "ccaa": "02",
+      "total": 302
+    },
+    {
+      "cod": "23",
+      "nombre": "Jaén",
+      "ccaa": "01",
+      "total": 585
+    },
+    {
+      "cod": "24",
+      "nombre": "León",
+      "ccaa": "07",
+      "total": 548
+    },
+    {
+      "cod": "25",
+      "nombre": "Lleida",
+      "ccaa": "09",
+      "total": 684
+    },
+    {
+      "cod": "26",
+      "nombre": "La Rioja",
+      "ccaa": "17",
+      "total": 307
+    },
+    {
+      "cod": "27",
+      "nombre": "Lugo",
+      "ccaa": "12",
+      "total": 604
+    },
+    {
+      "cod": "28",
+      "nombre": "Madrid",
+      "ccaa": "13",
+      "total": 4382
+    },
+    {
+      "cod": "29",
+      "nombre": "Málaga",
+      "ccaa": "01",
+      "total": 1177
+    },
+    {
+      "cod": "30",
+      "nombre": "Murcia",
+      "ccaa": "14",
+      "total": 1977
+    },
+    {
+      "cod": "31",
+      "nombre": "Navarra",
+      "ccaa": "15",
+      "total": 766
+    },
+    {
+      "cod": "32",
+      "nombre": "Ourense",
+      "ccaa": "12",
+      "total": 365
+    },
+    {
+      "cod": "33",
+      "nombre": "Asturias",
+      "ccaa": "03",
+      "total": 920
+    },
+    {
+      "cod": "34",
+      "nombre": "Palencia",
+      "ccaa": "07",
+      "total": 202
+    },
+    {
+      "cod": "35",
+      "nombre": "Las Palmas",
+      "ccaa": "05",
+      "total": 556
+    },
+    {
+      "cod": "36",
+      "nombre": "Pontevedra",
+      "ccaa": "12",
+      "total": 1121
+    },
+    {
+      "cod": "37",
+      "nombre": "Salamanca",
+      "ccaa": "07",
+      "total": 306
+    },
+    {
+      "cod": "38",
+      "nombre": "Santa Cruz de Tenerife",
+      "ccaa": "05",
+      "total": 526
+    },
+    {
+      "cod": "39",
+      "nombre": "Cantabria",
+      "ccaa": "06",
+      "total": 564
+    },
+    {
+      "cod": "40",
+      "nombre": "Segovia",
+      "ccaa": "07",
+      "total": 193
+    },
+    {
+      "cod": "41",
+      "nombre": "Sevilla",
+      "ccaa": "01",
+      "total": 1711
+    },
+    {
+      "cod": "42",
+      "nombre": "Soria",
+      "ccaa": "07",
+      "total": 84
+    },
+    {
+      "cod": "43",
+      "nombre": "Tarragona",
+      "ccaa": "09",
+      "total": 831
+    },
+    {
+      "cod": "44",
+      "nombre": "Teruel",
+      "ccaa": "02",
+      "total": 214
+    },
+    {
+      "cod": "45",
+      "nombre": "Toledo",
+      "ccaa": "08",
+      "total": 802
+    },
+    {
+      "cod": "46",
+      "nombre": "Valencia/València",
+      "ccaa": "10",
+      "total": 2619
+    },
+    {
+      "cod": "47",
+      "nombre": "Valladolid",
+      "ccaa": "07",
+      "total": 512
+    },
+    {
+      "cod": "48",
+      "nombre": "Bizkaia",
+      "ccaa": "16",
+      "total": 989
+    },
+    {
+      "cod": "49",
+      "nombre": "Zamora",
+      "ccaa": "07",
+      "total": 222
+    },
+    {
+      "cod": "50",
+      "nombre": "Zaragoza",
+      "ccaa": "02",
+      "total": 1092
+    },
+    {
+      "cod": "51",
+      "nombre": "Ceuta",
+      "ccaa": "18",
+      "total": 24
+    },
+    {
+      "cod": "52",
+      "nombre": "Melilla",
+      "ccaa": "19",
+      "total": 9
+    }
+  ]
+}
