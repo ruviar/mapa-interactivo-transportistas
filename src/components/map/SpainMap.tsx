@@ -53,7 +53,7 @@ interface Props {
 /**
  * Mapa base sin teselas: la coropleta es toda la información y un mapa de calles
  * debajo solo añadiría ruido (y una dependencia de un servidor de terceros).
- * El "mar" es el propio fondo de la interfaz.
+ * El "mar" es el fondo del contenedor, en azul pálido de carta náutica.
  */
 export function SpainMap({
   vista,
