@@ -1,93 +1,122 @@
 # Sistema de diseño: Mapa de transportistas España
 
 ## Concepto
-La señalética viaria española como lenguaje visual. No es un tema "bonito" aplicado por
-encima — es lo que ya usa el propio dominio para comunicar información geográfica y
-categórica de un vistazo, en carretera, a velocidad. Verde para autovía, azul para
-información de servicio, blanco/negro para carreteras convencionales, ámbar para lo
-que requiere atención. Reutilizamos ese código porque ya es intuitivo para cualquier
-español y encaja con el contenido exacto de esta herramienta.
 
-Evitar explícitamente: fondo crema + serif + acento terracota; negro + acento neón;
-maquetación tipo periódico con reglas finas. Ninguno tiene relación con el dominio.
+Navy / crema / ámbar. Sustituye a la señalética viaria (verde autovía / azul
+panel) de la versión anterior por una paleta de dos tonos de marca — navy
+como estructura, ámbar como acento único — sobre un fondo crudo en vez de
+blanco puro. Decisión consciente del cliente, no una deriva accidental hacia
+el look genérico que la propia versión anterior advertía evitar: lo que
+distingue esto de un "navy + cream" de plantilla es el hilo conductor (la
+carretera como línea que conecta, ver más abajo), las cifras en monoespaciada,
+y el marco de navegador del mapa embebido — no la paleta por sí sola.
 
 ## Color
 
 | Token | Hex | Uso |
 |---|---|---|
-| `--color-base` | `#F6F5F1` | Fondo general — blanco carretera envejecido, no blanco puro |
-| `--color-ink` | `#1B211D` | Texto principal — negro con matiz verdoso, como el asfalto |
-| `--color-autovia` | `#0A6847` | Verde autovía — acento primario, estados activos, CCAA con más resultados |
-| `--color-panel` | `#0F4C8A` | Azul panel informativo — elementos de navegación, breadcrumb, links |
-| `--color-atencion` | `#E8A33D` | Ámbar de atención — filtro activo, highlight de selección, hover en mapa |
-| `--color-asfalto` | `#9CA39D` | Gris neutro — bordes, divisores, texto secundario, estado inactivo |
+| `--color-base` | `#F6F2EA` | Fondo general — crema, no blanco puro |
+| `--color-ink` | `#17181A` | Texto principal |
+| `--color-navy-950` | `#0C1E3D` | Fondo del hero (zona más oscura) y del pie de página |
+| `--color-navy-800` | `#16305A` | Fondo del hero (zona superior); superficie oscura secundaria (barra de cobertura, pulgar del slider en reposo) |
+| `--color-atencion` | `#DFA23A` | Ámbar — único acento: CTA, filtro activo, hover del mapa, foco de teclado, enlaces |
+| `--color-asfalto` | `#8B93A1` | Gris-azulado neutro — bordes, texto secundario, estado inactivo |
+| `--color-mar` | `#9FB0C9` | El mar del mapa — `--color-navy-800` rebajado ~45% sobre `--color-base`, no un azul traído de fuera. ~8:1 de contraste con la tinta |
 
-La coropleta del mapa usa una escala de `--color-base` → `--color-autovia` (5 pasos),
-nunca solo diferencias de tono sutiles: cada paso lleva también un valor numérico visible
-al hacer hover/tap, para no depender solo del color (accesibilidad).
+Un único acento (ámbar) y no dos como en la versión anterior (verde +
+ámbar): con la paleta reducida a dos tonos de marca, separar "esto mide
+transportistas" de "esto es informativo/estructural" ya no se resuelve con
+un segundo color de acento — se resuelve con navy (estructura, p. ej.
+`CoverageChip`) frente a ámbar (interacción/atención). Ver el comentario de
+`CoverageChip.tsx` para el caso concreto que motivó la distinción.
+
+La coropleta del mapa usa una escala de 6 pasos, crema → ámbar → navy (no
+verde), calculada por cuantiles sobre los valores presentes — nunca lineal,
+el reparto de empresas de transporte por España es muy desigual. Cada paso
+lleva además la cifra visible (accesibilidad), no solo color:
+
+```
+0 empresas   → #EFEAE0
+1er cuantil  → #D8C9A8
+2º cuantil   → #C9A868
+3er cuantil  → #B98A3F
+4º cuantil   → #8A5A2E
+5º cuantil   → #16305A (navy, máxima densidad)
+```
 
 ## Tipografía
 
-- **Display (títulos, nombres de región al navegar):** Archivo Expanded, SemiBold/Bold.
-  Condensada/expandida como la lettering de señal de autopista, usada con moderación —
-  solo en el nombre de la CCAA/provincia activa y en el título de cabecera.
-- **Cuerpo (UI general, listados, filtros):** Inter, Regular/Medium. Neutra y muy legible
-  a tamaños pequeños, que es la mayoría de la interfaz.
-- **Datos (NIF, cifras, coordenadas, contadores):** IBM Plex Mono, Regular. Todo lo que
-  sea un dato "de tabla" o identificador va en monoespaciada — evoca el manifiesto/albarán
-  impreso y ayuda a escanear columnas de números.
+Sin cambios respecto a la versión anterior — ya cumplía lo que pediría
+cualquier brief nuevo:
 
-Escala tipográfica sugerida (rem): 0.75 / 0.875 / 1 / 1.25 / 1.75 / 2.5
-(caption / body-sm / body / label-lg / heading / display)
+- **Display (títulos, nombre de región activa):** Archivo, eje `wdth`
+  variable — 112% en la herramienta (`rotulo`), 125% en la landing
+  (`rotulo-landing`).
+- **Cuerpo:** Inter.
+- **Datos (cifras, NIF, umbral, contadores):** IBM Plex Mono. Todo lo que sea
+  un dato "de tabla" o un contador va en monoespaciada — separa visualmente
+  dato de prosa.
 
-## Layout
+## Forma
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│ [Título]        España · X empresas       [Slider empleados] │  Header, ~60px
-├───────────────────────────────────┬───────────────────────────┤
-│                                     │ España > Aragón > Zaragoza│ Breadcrumb
-│                                     ├───────────────────────────┤
-│                                     │ 🔍 Buscar empresa...      │
-│                                     ├───────────────────────────┤
-│           MAPA                      │ TRANS SESE SL             │
-│        (coropleta,                  │ B50600527 · 12 empl.       │
-│      clic para navegar)             │ ─────────────────────────│
-│                                     │ CARRERAS GRUPO LOGISTICO  │
-│                                     │ A50018837 · 8 empl.        │
-│                                     │ ...                        │
-│                                     │ [lista virtualizada]       │
-├─────────────────────────────────────┴───────────────────────────┤
-│ Leyenda coropleta (gradiente + valores)      Nota metodológica  │  Footer, ~40px
-└─────────────────────────────────────────────────────────────────┘
-```
+- Radios: `rounded-sm` (4px) en controles pequeños, `rounded-xl` (12px) en
+  tarjetas y en el marco de navegador del mapa embebido — escala por defecto
+  de Tailwind 4, sin tokens propios. El mapa en sí sigue sin radio: los
+  límites de provincia ya son la forma.
+- Sombras: tres alturas (`--shadow-apoyo/alta/mano` en `theme.css`), con
+  tinte navy (`rgba(12,30,61,…)`) en vez de gris neutro — cohesiona más con
+  el resto de la paleta. Mecanismo sin cambios (`animation/elevacion.ts`).
 
-Mapa ocupa ~65-70% del ancho en desktop, panel lateral fijo a la derecha ~30-35%.
-En tablet/móvil: el panel se convierte en hoja inferior (bottom sheet) que sube al
-seleccionar provincia, mapa a pantalla completa por defecto.
+## El hilo conductor
 
-## Elemento de firma
+Una carretera como línea que conecta, con el mismo significado cada vez que
+aparece — tres apariciones y ninguna más:
 
-Al seleccionar una provincia, el borde de esa provincia se dibuja con una animación de
-"trazado de ruta" — una línea que recorre el perímetro como si fuera una carretera
-señalizándose en el mapa, en vez de simplemente cambiar de color de golpe. Es el único
-momento de protagonismo animado de toda la interfaz; todo lo demás es funcional y quieto.
+1. **Hero** (`RedDeRutas.tsx`): corredores radiales que se dibujan solos al
+   cargar, con paradas que pulsan una vez al llegar la línea.
+2. **Mapa → listado** (`ConectorSeleccion.tsx`): al seleccionar una
+   provincia, una línea se dibuja desde su centroide hasta la cabecera del
+   listado — la ruta hacia el resultado, literalmente. Se suma al trazado de
+   perímetro de `RouteTraceOverlay.tsx` (que sigue marcando la selección
+   sobre el propio mapa); no lo sustituye — son dos lecturas del mismo
+   motivo, una sobre el mapa y otra hacia el panel.
+3. **Cómo funciona** (`ComoFunciona.tsx`): una guía horizontal conecta los
+   pasos 01→02→03, dibujándose según el scroll.
 
-## Animación (con moderación, nunca decorativa)
+No se multiplica en más sitios. Un momento bien ejecutado pesa más que diez
+animaciones sueltas.
 
-- **Selección de CCAA/provincia:** `flyTo`/`fitBounds` del mapa con easing ~350-450ms.
-  Borde de la región seleccionada se traza (ver elemento de firma), ~600ms una sola vez.
-- **Cambio de filtro (slider empleados):** transición de color en la coropleta ~200ms,
-  sin retraso perceptible — tiene que sentirse "vivo" al mover el slider.
-- **Panel lateral / bottom sheet:** slide-in/out ~250ms, easing estándar, sin rebote.
-- **Hover en fila de empresa:** cambio de fondo sutil, sin escalado ni sombra.
-- **Carga inicial:** silueta de España con una línea punteada dibujándose una vez,
-  disuelve al cargar los datos. No repetir en cargas posteriores.
-- Respetar `prefers-reduced-motion`: desactivar el trazado de ruta y usar transiciones
-  instantáneas o muy breves (<100ms) en su lugar.
+## Animación
+
+- **Motion** gobierna las micro-interacciones existentes: `Accion`,
+  `Tarjeta`, `Revelar`, `Odometro`, la salida del hero por scroll. Física
+  propia en `animation/resortes.ts` — un muelle por intención (elevación,
+  pulsación, odómetro, trazado), no valores sueltos en cada componente.
+- **GSAP** (`animation/gsap.ts`, registro único de plugins — todos gratuitos
+  desde la compra de Webflow) entra donde Motion no llega bien:
+  - `SplitText`: entrada por palabras del titular del hero. Único uso del sitio.
+  - `Draggable`: el slider de umbral custom (`EmployeeThresholdSlider.tsx`).
+  - `Flip`: reordena `RegionList.tsx` cuando el umbral cambia el ranking.
+    No se usa en `CompanyList.tsx` — esa lista está virtualizada
+    (`react-window`) y puede traer miles de filas; Flip necesita elementos
+    DOM estables para medir, y con filas recicladas no hay "antes" que
+    comparar.
+  - `DrawSVG`: la guía de `ComoFunciona` y el conector mapa→listado.
+  - `ScrollTrigger`, sin `pin`: la sección del mapa usa `position: sticky`
+    para el anclaje visual (cero dependencia de sincronizar con Lenis) y
+    triggers sueltos (`onEnter`/`onEnterBack`) solo para detectar qué paso
+    está a la vista y pilotar el mapa real vía la prop `demo` de `App`.
+- El trazado de firma (`RouteTraceOverlay`, muelle `RESORTE_TRAZADO`) y el
+  cambio de color de la coropleta (200ms, `.region` en `theme.css`) no han
+  cambiado de mecanismo, solo de paleta.
+- `prefers-reduced-motion`: cada pieza nueva comprueba `useMenosMovimiento()`
+  o `window.matchMedia` igual que las existentes — sin excepciones. La regla
+  global de `theme.css` (duraciones a 0.01ms) sigue siendo la red de
+  seguridad final.
 
 ## Accesibilidad de la coropleta
 
-Nunca codificar solo por color. Cada paso de la escala lleva un patrón sutil de textura
-(o al menos un valor numérico en tooltip/hover permanente en el propio SVG, no solo hover)
-para que la información sea legible también en escala de grises o para daltonismo.
+Sin cambios de fondo: nunca solo color. Cada paso lleva la cifra visible
+sobre la propia región, con halo del color del relleno para legibilidad
+sobre el mar. `VAR_CIFRA` en `choroplethScale.ts` decide tinta clara u
+oscura por paso para mantener contraste AA sobre los nuevos rellenos.

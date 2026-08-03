@@ -78,7 +78,7 @@ export function Fase6Lab() {
         <div className="mt-5 flex flex-wrap items-center gap-3">
           <Pulsable
             type="button"
-            className="text-caption text-panel underline-offset-2 hover:underline"
+            className="text-caption text-atencion underline-offset-2 hover:underline"
           >
             Control plano (breadcrumb)
           </Pulsable>

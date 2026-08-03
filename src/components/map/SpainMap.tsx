@@ -1,5 +1,7 @@
 import { divIcon } from 'leaflet';
+import type { Map as LeafletMap } from 'leaflet';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import type { RefObject } from 'react';
 import { MapContainer, Marker, Rectangle, ZoomControl, useMap } from 'react-leaflet';
 
 import type { Vista } from '../../hooks/useMapNavigation';
@@ -15,6 +17,7 @@ import {
 import type { CortesCoropleta } from '../../utils/choroplethScale';
 import { ChoroplethLayer } from './ChoroplethLayer';
 import { LoadingSilhouette } from './LoadingSilhouette';
+import { PistaInicial } from './PistaInicial';
 import { RouteTraceOverlay } from './RouteTraceOverlay';
 
 const LIMITES = limitesDe(CCAA_GEO);
@@ -46,6 +49,10 @@ interface Props {
   cortesProvincias: CortesCoropleta;
   /** Mientras llega `companies.json` se traza la silueta del país. */
   cargando: boolean;
+  /** Halo de primera visita (`PistaInicial`); `App.tsx` lo apaga al primer click. */
+  pistaActiva: boolean;
+  /** La instancia de Leaflet, para `ConectorSeleccion` — que vive fuera de este árbol. */
+  mapaRef?: RefObject<LeafletMap | null>;
   onSeleccionarCCAA: (cod: string) => void;
   onSeleccionarProvincia: (cod: string) => void;
 }
@@ -64,6 +71,8 @@ export function SpainMap({
   cortesCCAA,
   cortesProvincias,
   cargando,
+  pistaActiva,
+  mapaRef,
   onSeleccionarCCAA,
   onSeleccionarProvincia,
 }: Props) {
@@ -100,6 +109,7 @@ export function SpainMap({
 
   return (
     <MapContainer
+      ref={mapaRef}
       bounds={LIMITES}
       boundsOptions={{ padding: MARGEN }}
       maxBounds={LIMITES_ARRASTRE}
@@ -137,6 +147,9 @@ export function SpainMap({
       )}
 
       <LoadingSilhouette cargando={cargando} />
+
+      {/* Solo a nivel nacional: es donde está el primer click posible. */}
+      {nacional && <PistaInicial activo={pistaActiva} />}
 
       {/* Canarias está trasladada al Atlántico: la cartela deja claro que ese
           recuadro es un inset cartográfico y no su posición real. */}

@@ -42,29 +42,26 @@
  * no escribir hex sueltos en los componentes.
  */
 @theme {
-  /* Señalética viaria española */
-  --color-base: #f6f5f1; /* blanco carretera envejecido */
-  --color-ink: #1b211d; /* asfalto */
-  --color-autovia: #0a6847; /* verde autovía, acento primario */
-  --color-panel: #0f4c8a; /* azul panel informativo, navegación */
-  --color-atencion: #e8a33d; /* ámbar, filtro activo y hover */
-  --color-asfalto: #9ca39d; /* gris neutro, bordes y texto secundario */
-  /* Mar de carta náutica: el azul de panel informativo (#0f4c8a) rebajado sobre
-     blanco, para que el agua entre en la misma familia y no sea un azul traído
-     de fuera. Al 40%: por debajo de eso el agua se lee como gris y el contorno
-     de la península solo lo sostiene el borde; por encima, empieza a disputarle
-     el sitio a los cinco verdes de la coropleta y al ámbar de la selección.
-     La tinta sobre el mar mantiene 8:1 de contraste. */
-  --color-mar: #9fb7d0;
+  /* Navy / cream / amber. Dos tonos de marca (navy y ámbar) más un neutro,
+     en vez de la paleta viaria anterior — ver DESIGN_SYSTEM.md. */
+  --color-base: #f6f2ea; /* crema, fondo de las secciones de contenido */
+  --color-ink: #17181a; /* texto principal */
+  --color-navy-950: #0c1e3d; /* fondo del hero, zona más oscura; también el pie */
+  --color-navy-800: #16305a; /* fondo del hero, zona superior; superficie oscura secundaria */
+  --color-atencion: #dfa23a; /* ámbar, acento único: CTA, filtro activo, hover */
+  --color-asfalto: #8b93a1; /* gris-azulado neutro, bordes y texto secundario */
+  /* Mar de carta náutica: navy-800 rebajado sobre crema (~45%), no un azul
+     traído de fuera. La tinta sobre el mar mantiene ~8:1 de contraste. */
+  --color-mar: #9fb0c9;
 
-  /* Escala coroplética: base -> autovía, 5 pasos.
-     Cada paso lleva además trama y cifra visible (accesibilidad). */
-  --color-mapa-1: #dce5dc;
-  --color-mapa-2: #b4cdb8;
-  --color-mapa-3: #7fae8e;
-  --color-mapa-4: #438a66;
-  --color-mapa-5: #0a6847;
-  --color-mapa-0: #e7e7e1; /* sin empresas que cumplan el filtro */
+  /* Escala coroplética: crema -> ámbar -> navy, 6 pasos (0 incluido).
+     Cada paso lleva además cifra visible (accesibilidad), no solo color. */
+  --color-mapa-0: #efeae0; /* sin empresas que cumplan el filtro */
+  --color-mapa-1: #d8c9a8;
+  --color-mapa-2: #c9a868;
+  --color-mapa-3: #b98a3f;
+  --color-mapa-4: #8a5a2e;
+  --color-mapa-5: #16305a; /* navy, máxima densidad */
 
   --font-display: 'Archivo', system-ui, sans-serif;
   --font-sans: 'Inter', system-ui, sans-serif;
@@ -78,6 +75,20 @@
   --text-heading: 1.75rem;
   --text-display: 2.5rem;
 
+  /* La escala de la herramienta se acaba en 2.5rem porque ahí nunca hace falta
+     más. Un hero sí: estos dos escalones son solo de la landing. */
+  /* El mínimo manda en móvil, y ahí un titular de 2,5rem se come el CTA: son
+     seis líneas antes de llegar al botón. Con 2rem y el tramo en vw cabe todo
+     en el primer pantallazo de un teléfono de 412×839.
+     El `min()` con `vh` es para el caso contrario: un portátil de 1366×768 va
+     sobrado de ancho y corto de alto, así que solo con el tramo en vw el
+     titular salía a 4,5rem y empujaba los CTA por debajo del pliegue. Metido
+     el alto de ventana en la cuenta, en viewports bajos el titular se encoge
+     —3,4rem a 768 px de alto— en vez de empujar, y a 1080 px sigue saliendo
+     al tope de 4,5rem. En móvil no cambia nada: ahí el que manda es el vw. */
+  --text-hero: clamp(2rem, min(8.4vw, 7vh), 4.5rem);
+  --text-titular: clamp(1.75rem, 3.4vw, 2.75rem);
+
   /* Tiempos de DESIGN_SYSTEM.md */
   --animate-duration-mapa: 400ms; /* flyTo/fitBounds */
   --animate-duration-coropleta: 200ms; /* cambio de umbral */
@@ -87,10 +98,12 @@
 
   /* Elevación (Fase 6). Tres alturas y ninguna más: apoyado en la mesa,
      levantado por el cursor, y en la mano (la hoja mientras se arrastra).
-     En rgba() literal: Motion no interpola entre dos color-mix(). */
-  --shadow-apoyo: 0 1px 2px -1px rgba(27, 33, 29, 0.16);
-  --shadow-alta: 0 4px 12px -5px rgba(27, 33, 29, 0.42);
-  --shadow-mano: 0 -8px 26px -12px rgba(27, 33, 29, 0.55);
+     En rgba() literal: Motion no interpola entre dos color-mix(). Tinte
+     navy (--color-navy-950 en rgb) en vez del tinte de tinta anterior: da
+     más cohesión con el resto de la paleta que un gris neutro. */
+  --shadow-apoyo: 0 1px 2px -1px rgba(12, 30, 61, 0.16);
+  --shadow-alta: 0 4px 12px -5px rgba(12, 30, 61, 0.42);
+  --shadow-mano: 0 -8px 26px -12px rgba(12, 30, 61, 0.55);
 }
 
 /**
@@ -102,6 +115,41 @@
   font-weight: 700;
   font-stretch: 112%;
   letter-spacing: -0.01em;
+}
+
+/**
+ * Rótulo de la landing: la misma Archivo, con el eje de ancho abierto del todo
+ * (125%, el tope del woff2 variable) frente al 112% de la herramienta.
+ *
+ * El brief pedía Overpass para los titulares por ser hija de la Highway
+ * Gothic. Esa decisión ya estaba tomada en este repo: Archivo se eligió por lo
+ * mismo y viene autoalojada con el eje `wdth`. Meter una segunda tipografía de
+ * señalética dejaría dos rotulaciones compitiendo justo en la costura donde la
+ * landing entrega el usuario al mapa. Un eje, dos voces: se cambia aquí si se
+ * prefiere Overpass, sin tocar ningún componente.
+ */
+@utility rotulo-landing {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-stretch: 125%;
+  letter-spacing: -0.02em;
+  line-height: 0.95;
+  text-wrap: balance;
+}
+
+/**
+ * Grano de película: mosaico de 180×180 de `feTurbulence` repetido, no un
+ * filtro SVG sobre la sección entera (eso obliga a rasterizar el ruido al
+ * tamaño completo en cada `resize`). Lo aplica la pieza `<Grano />`.
+ *
+ * El 4% es el techo: por encima el crema empieza a leerse sucio en pantallas
+ * sin gestión de color, y lo que se busca es que la superficie tenga tacto,
+ * no que se vea el ruido.
+ */
+@utility grano {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23r)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  opacity: 0.04;
 }
 
 html {
@@ -120,7 +168,15 @@ html {
 /* El relleno lo escribe Leaflet en el atributo `fill`; aquí solo se anima
    para que el cambio de umbral se sienta continuo y no un parpadeo. */
 .region {
-  transition: fill var(--animate-duration-coropleta) ease;
+  transition:
+    fill var(--animate-duration-coropleta) ease,
+    filter 150ms ease;
+}
+/* El cambio de trazo a ámbar ya lo pone `ChoroplethLayer` por evento (para
+   poder traerla al frente con `bringToFront`); esto solo añade el realce de
+   brillo y una sombra de color que un `box-shadow` no puede dar a un <path>. */
+.region:hover {
+  filter: brightness(1.08) drop-shadow(0 2px 5px rgba(12, 30, 61, 0.35));
 }
 
 /* Cifra permanente sobre cada región: la coropleta no puede depender solo del
@@ -190,6 +246,36 @@ html {
   stroke: var(--color-ink);
 }
 
+/* Pista inicial: halo que sugiere que el mapa es clicable (PistaInicial.tsx). */
+.pista-punto {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--color-atencion);
+}
+.pista-halo {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: var(--color-atencion);
+  animation: pista-pulso 4s ease-out infinite;
+}
+@keyframes pista-pulso {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(4.5);
+    opacity: 0;
+  }
+}
+
 /* Recuadro del inset canario. */
 .cartela {
   stroke: var(--color-asfalto);
@@ -221,55 +307,45 @@ html {
 }
 .leaflet-control-zoom a:hover {
   background: #fff;
-  color: var(--color-autovia);
+  color: var(--color-atencion);
 }
 
 /* ------------------------------------------------------------- Filtros --- */
 
 /**
- * Slider de umbral. Va a mano y no con utilidades: `appearance: none` borra
- * también el pulgar en Chromium, así que hay que redibujar pista y pulgar en
- * los dos motores. Cuadrado y sin sombra, como el resto de controles.
+ * Slider de umbral: control real para teclado y lector de pantalla, pero el
+ * arrastre y el dibujo los lleva el pulgar custom de `EmployeeThresholdSlider`
+ * (`Draggable` de GSAP). Transparente y no `opacity:0` a propósito: así
+ * conserva el anillo de foco de `@layer base` cuando se llega a él con Tab.
+ * `pointer-events: none` le pasa el arrastre al pulgar de debajo.
  */
-.slider-umbral {
+.slider-umbral-fantasma {
   appearance: none;
-  height: 1.25rem; /* área de pulsación cómoda; la pista visible son 2 px */
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
   background: transparent;
+  pointer-events: none;
   cursor: pointer;
 }
-.slider-umbral::-webkit-slider-runnable-track {
-  height: 2px;
-  background: color-mix(in srgb, var(--color-asfalto) 60%, transparent);
-}
-.slider-umbral::-moz-range-track {
-  height: 2px;
-  background: color-mix(in srgb, var(--color-asfalto) 60%, transparent);
-}
-.slider-umbral::-webkit-slider-thumb {
+.slider-umbral-fantasma::-webkit-slider-runnable-track,
+.slider-umbral-fantasma::-webkit-slider-thumb {
   appearance: none;
-  width: 0.5rem;
-  height: 1rem;
-  margin-top: -7px; /* centra el pulgar sobre la pista */
+  background: transparent;
   border: 0;
-  border-radius: 0;
-  background: var(--color-autovia);
 }
-.slider-umbral::-moz-range-thumb {
-  width: 0.5rem;
-  height: 1rem;
+.slider-umbral-fantasma::-moz-range-track,
+.slider-umbral-fantasma::-moz-range-thumb {
+  appearance: none;
+  background: transparent;
   border: 0;
-  border-radius: 0;
-  background: var(--color-autovia);
-}
-.slider-umbral:active::-webkit-slider-thumb {
-  background: var(--color-atencion); /* ámbar: filtro en uso */
-}
-.slider-umbral:active::-moz-range-thumb {
-  background: var(--color-atencion);
 }
 
 /**
- * Foco de teclado visible en todos los controles (azul panel informativo).
+ * Foco de teclado visible en todos los controles (ámbar de atención: es el
+ * único acento que queda en la paleta, así que también hace de foco).
  *
  * Va en `@layer base` a propósito: las reglas sin capa ganan a las utilidades
  * de Tailwind pase lo que pase con la especificidad, y entonces ningún control
@@ -278,7 +354,7 @@ html {
  */
 @layer base {
   :where(a, button, input, select, [tabindex]):focus-visible {
-    outline: 2px solid var(--color-panel);
+    outline: 2px solid var(--color-atencion);
     outline-offset: 2px;
   }
 }

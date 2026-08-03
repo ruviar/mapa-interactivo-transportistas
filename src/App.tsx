@@ -1,7 +1,17 @@
-import { useDeferredValue, useMemo, useState, type CSSProperties } from 'react';
+import type { Map as LeafletMap } from 'leaflet';
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react';
 
 import { Footer } from './components/layout/Footer';
 import { Header } from './components/layout/Header';
+import { ConectorSeleccion } from './components/map/ConectorSeleccion';
 import { SpainMap } from './components/map/SpainMap';
 import type { Segmento } from './components/sidebar/Breadcrumb';
 import type { FilaRegion } from './components/sidebar/RegionList';
@@ -18,17 +28,41 @@ import { contar, cumplenPorRegion, UMBRAL_INICIAL, type Conteo } from './utils/d
 
 const REGIONES = regiones as Regiones;
 const NOMBRE_CCAA = new Map(REGIONES.ccaa.map((c) => [c.cod, c.nombre]));
+
+/** Una vez por pestaña: si ya se ha navegado, la pista inicial no vuelve a salir. */
+const CLAVE_PISTA = 'mapa-interactuado';
 const NOMBRE_PROVINCIA = new Map(REGIONES.provincias.map((p) => [p.cod, p.nombre]));
 
 const porTamano = (a: FilaRegion, b: FilaRegion) =>
   b.cumplen - a.cumplen || a.nombre.localeCompare(b.nombre, 'es');
+
+/** Aragón › Zaragoza: la comunidad y provincia de ejemplo del scrollytelling de `SeccionMapa`. */
+const DEMO_CCAA = '02';
+const DEMO_PROVINCIA = '50';
+const DEMO_UMBRAL = 5;
+
+export interface DemoMapa {
+  /** Paso activo del scrollytelling; `null` = fuera del recorrido, vuelve a España. */
+  paso: 1 | 2 | 3 | null;
+}
+
+interface Props {
+  /**
+   * Presente solo cuando `App` vive dentro de `SeccionMapa.tsx`: el texto del
+   * scrollytelling pilota el mapa real a través de las funciones de
+   * navegación que ya existen (`nav.irACCAA`, `setUmbral`…), no añade estado
+   * de dominio nuevo. Sin esta prop —el caso normal, `?app`— el efecto de
+   * abajo no hace nada y el comportamiento no cambia un pelo.
+   */
+  demo?: DemoMapa;
+}
 
 /**
  * Fase 5 — pulido. Lo de la Fase 4 (España › comunidad › provincia, umbral y
  * buscador) con dos formas: columna fija en escritorio y hoja inferior sobre el
  * mapa a pantalla completa en tablet y móvil.
  */
-export default function App() {
+export default function App({ demo }: Props = {}) {
   const carga = useDataset();
   const dataset = carga.estado === 'listo' ? carga.dataset : null;
 
@@ -37,11 +71,54 @@ export default function App() {
   const provinciasGeo = useProvincias();
   const hoja = useBottomSheet(nav.clave, vista.nivel);
 
+  // La instancia de Leaflet y la cabecera del panel, para `ConectorSeleccion`:
+  // vive fuera de los dos árboles y necesita un punto de partida y uno de
+  // llegada que ninguno de los dos componentes puede darle por prop normal.
+  const mapaRef = useRef<LeafletMap | null>(null);
+  const tituloRef = useRef<HTMLHeadingElement | null>(null);
+
+  // Lee sessionStorage una sola vez, en el inicializador: así una pestaña que
+  // ya ha navegado no llega a ver la pista ni un fotograma antes de apagarse.
+  const [pistaActiva, setPistaActiva] = useState(() => !sessionStorage.getItem(CLAVE_PISTA));
+  const apagarPista = useCallback(() => {
+    sessionStorage.setItem(CLAVE_PISTA, '1');
+    setPistaActiva(false);
+  }, []);
+  const alSeleccionarCCAA = useCallback(
+    (cod: string) => {
+      apagarPista();
+      nav.irACCAA(cod);
+    },
+    [apagarPista, nav],
+  );
+  const alSeleccionarProvincia = useCallback(
+    (cod: string) => {
+      apagarPista();
+      nav.irAProvincia(cod);
+    },
+    [apagarPista, nav],
+  );
+
   const [umbral, setUmbral] = useState(UMBRAL_INICIAL);
   // Recontar 42.839 empresas y repintar 52 polígonos en cada píxel del slider
   // atascaría el pulgar. Con el valor diferido el control responde al instante
   // y el mapa llega un fotograma después, que es justo lo que se quiere.
   const umbralAplicado = useDeferredValue(umbral);
+
+  // Puente del scrollytelling: orquesta el estado que ya existe (no añade
+  // ninguno de dominio nuevo). Fuera de `SeccionMapa` `demo` es `undefined` y
+  // esto no hace nada.
+  useEffect(() => {
+    if (!demo) return;
+    if (demo.paso === null) {
+      nav.irANacional();
+      return;
+    }
+    nav.irACCAA(DEMO_CCAA);
+    if (demo.paso >= 2) setUmbral(DEMO_UMBRAL);
+    if (demo.paso === 3) nav.irAProvincia(DEMO_PROVINCIA);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [demo?.paso]);
 
   const recuentos = useMemo(
     () => (dataset ? contar(dataset, REGIONES, umbralAplicado) : null),
@@ -127,11 +204,15 @@ export default function App() {
   const tapado = hoja.esHoja ? hoja.asomo : 0;
 
   return (
-    // La ventana exacta y nada de scroll de documento, también en móvil: allí
+    // La caja que le den y nada de scroll de documento, también en móvil: allí
     // el panel es una hoja `fixed` y el pie no se dibuja, así que no hay nada
     // que se salga por abajo. Solo hacen scroll los listados.
+    //
+    // `h-full` y no `h-dvh`: suelta la herramienta es la ventana exacta (su
+    // envoltorio en main.tsx pone el `h-dvh`), y dentro de la landing es el
+    // panel que la enmarca quien decide el alto. Nada más cambia aquí.
     <div
-      className="flex h-dvh flex-col overflow-hidden bg-base font-sans text-ink"
+      className="flex h-full flex-col overflow-hidden bg-base font-sans text-ink"
       // Alto del asomo, publicado para que el mapa sepa dónde acabar.
       style={{ '--asomo': `${tapado}px` } as CSSProperties}
     >
@@ -161,8 +242,10 @@ export default function App() {
               cortesCCAA={cortesCCAA}
               cortesProvincias={cortesProvincias}
               cargando={carga.estado === 'cargando'}
-              onSeleccionarCCAA={nav.irACCAA}
-              onSeleccionarProvincia={nav.irAProvincia}
+              pistaActiva={pistaActiva}
+              mapaRef={mapaRef}
+              onSeleccionarCCAA={alSeleccionarCCAA}
+              onSeleccionarProvincia={alSeleccionarProvincia}
             />
           </div>
 
@@ -193,10 +276,20 @@ export default function App() {
           ambitoCoropleta={ambitoCoropleta}
           datosListos={recuentos !== null}
           hoja={hoja}
+          refTitulo={tituloRef}
           onCambiarOrden={setOrden}
-          onSeleccionarRegion={vista.nivel === 'nacional' ? nav.irACCAA : nav.irAProvincia}
+          onSeleccionarRegion={vista.nivel === 'nacional' ? alSeleccionarCCAA : alSeleccionarProvincia}
         />
       </main>
+
+      <ConectorSeleccion
+        mapaRef={mapaRef}
+        tituloRef={tituloRef}
+        provinciasGeo={provinciasGeo}
+        vista={vista}
+        clave={nav.clave}
+        activo={!hoja.esHoja}
+      />
 
       <Footer cortes={cortes} ambito={ambitoCoropleta} activa={recuentos !== null} />
     </div>

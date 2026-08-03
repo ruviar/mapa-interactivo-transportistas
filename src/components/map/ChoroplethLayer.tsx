@@ -4,6 +4,7 @@ import type { Feature } from 'geojson';
 import { Fragment, useEffect, useMemo, useReducer, useRef } from 'react';
 import { CircleMarker, GeoJSON, Marker, useMap, useMapEvent } from 'react-leaflet';
 
+import { gsap } from '../../animation/gsap';
 import type { ColeccionRegiones, FeatureRegion, PropiedadesRegion } from '../../types/geo';
 import { cajaDe } from '../../utils/cartografia';
 import { leerPaleta, pasoDe, type CortesCoropleta, type PasoCoropleta } from '../../utils/choroplethScale';
@@ -64,8 +65,8 @@ export function ChoroplethLayer({ regiones, recuentos, cortes, modo, onSeleccion
   const estiloDe = useMemo(() => {
     return (paso: PasoCoropleta): PathOptions =>
       modo === 'contexto'
-        ? { className: 'region', fillColor: paleta.relleno[0], fillOpacity: 0.55, color: paleta.borde, weight: 0.6, opacity: 0.25 }
-        : { className: 'region', fillColor: paleta.relleno[paso], fillOpacity: 1, color: paleta.borde, weight: 0.8, opacity: 0.5 };
+        ? { className: 'region', fillColor: paleta.relleno[0], fillOpacity: 0.25, color: paleta.borde, weight: 0.5, opacity: 0.3 }
+        : { className: 'region', fillColor: paleta.relleno[paso], fillOpacity: 1, color: paleta.borde, weight: 0.5, opacity: 0.4 };
   }, [modo, paleta]);
 
   // `style` solo se evalúa al crear las capas; al cambiar el umbral o el nivel
@@ -76,6 +77,36 @@ export function ChoroplethLayer({ regiones, recuentos, cortes, modo, onSeleccion
       if (cod) (sub as Path).setStyle(estiloDe(pasos.get(cod) ?? 0));
     });
   }, [pasos, estiloDe]);
+
+  // Aparición escalonada: solo la primera vez que esta instancia de capa se
+  // monta (una capa de coropleta nueva nace al entrar en una comunidad, ver
+  // el `key` en SpainMap.tsx), nunca al recolorear por cambio de umbral —eso
+  // ya lo cubre la transición CSS de `.region`, no hace falta repetir el
+  // efecto de entrada por cada arrastre del slider.
+  useEffect(() => {
+    if (modo !== 'coropleta' || !capa.current) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const elementos: Element[] = [];
+    capa.current.eachLayer((sub) => {
+      const el = (sub as Path).getElement();
+      if (el) elementos.push(el);
+    });
+    if (elementos.length === 0) return;
+
+    gsap.set(elementos, { transformOrigin: '50% 50%' });
+    const animacion = gsap.from(elementos, {
+      opacity: 0,
+      scale: 0.9,
+      duration: 0.4,
+      stagger: 0.05,
+      ease: 'power2.out',
+    });
+    return () => {
+      animacion.kill();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const interactiva = modo === 'coropleta' && onSeleccionar !== undefined;
 
