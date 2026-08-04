@@ -47,7 +47,7 @@ export function CompanyRow({ empresa, style }: { empresa: Empresa; style: CSSPro
         }
       >
         {nf.format(flota.valor ?? 0)} {verificada ? 'veh.' : 'empl.'}
-        {verificada && <span className="ml-1 text-autovia">✓</span>}
+        {verificada && <span className="ml-1 text-navy-800">✓</span>}
       </p>
     </div>
   );

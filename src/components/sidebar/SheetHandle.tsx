@@ -26,7 +26,7 @@ export function SheetHandle({ hoja, controla }: { hoja: Hoja; controla: string }
       {/* Barra cuadrada, sin redondeo: el resto de controles tampoco lo lleva. */}
       <span
         aria-hidden="true"
-        className="block h-[3px] w-10 bg-asfalto group-focus-visible:bg-panel group-focus-visible:outline-2 group-focus-visible:outline-offset-4 group-focus-visible:outline-panel"
+        className="block h-[3px] w-10 bg-asfalto group-focus-visible:bg-atencion group-focus-visible:outline-2 group-focus-visible:outline-offset-4 group-focus-visible:outline-atencion"
       />
     </button>
   );

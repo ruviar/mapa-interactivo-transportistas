@@ -11,8 +11,8 @@ interface Props {
 
 /**
  * Cobertura de dato de la región activa. Va deliberadamente separada del
- * contador del filtro y en azul de panel informativo, no en verde de autovía:
- * el verde mide transportistas, esto mide de cuántos sabemos el tamaño.
+ * contador del filtro y en navy, no en el ámbar de atención: el ámbar mide
+ * transportistas (coropleta, filtro), esto mide de cuántos sabemos el tamaño.
  * Mezclar las dos cifras haría leer "1.899" como "los transportistas que hay".
  *
  * El denominador es provisional — activas del export de SABI — hasta que entre
@@ -41,7 +41,7 @@ export function CoverageChip({ conteo, ambito }: Props) {
 
       <div className="mt-1 h-0.5 w-full bg-asfalto/25" aria-hidden="true">
         <div
-          className="h-full bg-panel transition-[width] duration-200"
+          className="h-full bg-navy-800 transition-[width] duration-200"
           style={{ width: ratio === null ? '0%' : `${Math.max(ratio * 100, 0.5)}%` }}
         />
       </div>

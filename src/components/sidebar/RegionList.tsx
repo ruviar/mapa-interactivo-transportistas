@@ -1,3 +1,8 @@
+import { useLayoutEffect, useRef } from 'react';
+
+import { useMenosMovimiento } from '../../animation/fisica';
+import { Flip } from '../../animation/gsap';
+
 const nf = new Intl.NumberFormat('es-ES');
 
 export interface FilaRegion {
@@ -11,6 +16,14 @@ export interface FilaRegion {
  * Existe por dos motivos: el panel no se queda vacío mientras no hay provincia
  * elegida, y toda la navegación es alcanzable con el teclado sin depender de
  * poder pulsar un polígono.
+ *
+ * Al mover el umbral el orden cambia (más regiones cumplen, otras dejan de
+ * hacerlo) y las filas se reordenan con GSAP Flip en vez de saltar. Esto va
+ * aquí y no en `CompanyList`: aquella es una lista virtualizada de
+ * `react-window` que puede traer miles de filas, y Flip necesita elementos
+ * DOM estables para medir — con filas recicladas por el propio
+ * virtualizador no hay "antes" y "después" que comparar. Como mucho 52
+ * regiones, sin virtualizar: aquí sí tiene sentido.
  */
 export function RegionList({
   regiones,
@@ -19,8 +32,29 @@ export function RegionList({
   regiones: FilaRegion[];
   onSeleccionar: (cod: string) => void;
 }) {
+  const quieto = useMenosMovimiento();
+  const listaRef = useRef<HTMLUListElement>(null);
+  const estadoAnterior = useRef<Flip.FlipState | null>(null);
+
+  // Patrón estándar de Flip en React: el estado "antes" se captura al final
+  // de este mismo efecto en el render anterior; cuando `regiones` cambia de
+  // orden, el DOM ya está en las posiciones nuevas cuando el efecto vuelve a
+  // correr (los layout effects van después de que React pinta), así que
+  // `Flip.from` compara ese estado guardado contra la posición real actual.
+  useLayoutEffect(() => {
+    if (!listaRef.current || quieto) return;
+    if (estadoAnterior.current) {
+      Flip.from(estadoAnterior.current, {
+        targets: listaRef.current.children,
+        duration: 0.4,
+        ease: 'power2.out',
+      });
+    }
+    estadoAnterior.current = Flip.getState(listaRef.current.children);
+  }, [regiones, quieto]);
+
   return (
-    <ul className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+    <ul ref={listaRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
       {regiones.map((region) => (
         <li key={region.cod}>
           <button

@@ -1,6 +1,16 @@
-import { divIcon } from 'leaflet';
+import { divIcon, point } from 'leaflet';
+import type { Map as LeafletMap } from 'leaflet';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { MapContainer, Marker, Rectangle, ZoomControl, useMap } from 'react-leaflet';
+import {
+  MapContainer,
+  Marker,
+  Pane,
+  Rectangle,
+  TileLayer,
+  ZoomControl,
+  useMap,
+  useMapEvent,
+} from 'react-leaflet';
 
 import type { Vista } from '../../hooks/useMapNavigation';
 import type { ColeccionRegiones, FeatureRegion } from '../../types/geo';
@@ -12,16 +22,60 @@ import {
   limitesDe,
   type Limites,
 } from '../../utils/cartografia';
-import type { CortesCoropleta } from '../../utils/choroplethScale';
+import { leerPaleta, type CortesCoropleta } from '../../utils/choroplethScale';
 import { ChoroplethLayer } from './ChoroplethLayer';
 import { LoadingSilhouette } from './LoadingSilhouette';
-import { RelieveLayer } from './RelieveLayer';
+import { PistaInicial } from './PistaInicial';
 import { RouteTraceOverlay } from './RouteTraceOverlay';
 
 const LIMITES = limitesDe(CCAA_GEO);
 /** Hasta dónde deja arrastrar: un margen y no medio Atlántico. */
 const LIMITES_ARRASTRE = ensanchar(LIMITES, 2.5);
 const MARGEN: [number, number] = [24, 24];
+/**
+ * Cuánto tiene que salirse el zoom del encuadre natural del nivel actual
+ * (ver `NavegacionPorZoom`) para que la navegación le siga el paso. Con
+ * `zoomDelta={0.5}` son dos pulsaciones del botón +/-: ni un scroll suelto
+ * navega solo, ni hace falta perseguir el borde exacto del encuadre.
+ */
+const UMBRAL_ZOOM = 1;
+
+/**
+ * Mapa base real bajo la coropleta, en dos capas. La versión anterior traía
+ * `World_Terrain_Base`, que es un fondo *de apoyo*: relieve sí, pero el color
+ * casi lavado, y Portugal, Francia o el Magreb quedaban en gris junto a una
+ * España pintada por el dato. Aquí el territorio de fuera es el único que
+ * puede decir de qué está hecho el suelo, así que le toca color de verdad.
+ *
+ * - `fisico` (`World_Physical_Map`) pone el color de un mapa físico de atlas:
+ *   verdes en vegas y llanuras, ocres y marrones subiendo a las sierras,
+ *   azules por profundidad en el mar. Es el que da la lectura.
+ * - `relieve` (`World_Hillshade`) va encima en `multiply` (clase `.relieve`
+ *   en theme.css) y solo aporta la sombra del terreno.
+ *
+ * Son dos y no una porque el servicio físico se acaba en el zoom 8 y la vista
+ * de provincia llega a 9-11: sin la segunda capa, bajar a una provincia era
+ * ampliar una tesela borrosa. Con el relieve —que sí tiene teselas hasta 13—
+ * el color se estira, pero el dibujo del terreno sigue nítido y es él quien
+ * sostiene el detalle.
+ */
+export const TESELAS = {
+  fisico: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}',
+    zoomMax: 8,
+  },
+  relieve: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}',
+    zoomMax: 13,
+  },
+  /**
+   * El control de atribución de Leaflet va desactivado (`attributionControl`)
+   * para no meter una cajita gris en la esquina del mapa; la de las teselas se
+   * cita, como la del GeoJSON, en `NotaDatos`. Sigue siendo obligatoria: no
+   * hay mapa base sin decir de quién es.
+   */
+  atribucion: 'Mapa base: Esri',
+} as const;
 
 const [lonMin, latMin, lonMax, latMax] = CCAA_GEO.canarias.cartela;
 const CARTELA: Limites = [
@@ -47,14 +101,19 @@ interface Props {
   cortesProvincias: CortesCoropleta;
   /** Mientras llega `companies.json` se traza la silueta del país. */
   cargando: boolean;
+  /** Halo de primera visita (`PistaInicial`); `App.tsx` lo apaga al primer click. */
+  pistaActiva: boolean;
   onSeleccionarCCAA: (cod: string) => void;
   onSeleccionarProvincia: (cod: string) => void;
+  /** El zoom se sale del encuadre del nivel actual hacia fuera: retrocede uno. */
+  onAlejarNivel: () => void;
 }
 
 /**
- * Mapa base sin teselas: la coropleta es toda la información y un mapa de calles
- * debajo solo añadiría ruido (y una dependencia de un servidor de terceros).
- * El "mar" es el fondo del contenedor, en azul pálido de carta náutica.
+ * Mapa base físico (ver `TESELAS`) con la coropleta encima. El reparto es el
+ * de una carta: dentro de España manda el dato —los colores de la leyenda— y
+ * fuera manda el terreno, que es lo único que ese territorio tiene que contar.
+ * Un mapa de calles debajo solo añadiría ruido.
  */
 export function SpainMap({
   vista,
@@ -65,10 +124,14 @@ export function SpainMap({
   cortesCCAA,
   cortesProvincias,
   cargando,
+  pistaActiva,
   onSeleccionarCCAA,
   onSeleccionarProvincia,
+  onAlejarNivel,
 }: Props) {
   const nacional = vista.nivel === 'nacional';
+  /** El azul de mar del tema, para tapar el relieve bajo la cartela canaria. */
+  const colorMar = useMemo(() => leerPaleta().fondo, []);
 
   /** Provincias de la comunidad activa. Nueva colección => `key` nueva en la capa. */
   const provinciasVisibles = useMemo(() => {
@@ -114,7 +177,51 @@ export function SpainMap({
     >
       <Encuadre clave={clave} limites={objetivo} onFin={alEncuadrar} />
 
-      <RelieveLayer />
+      <NavegacionPorZoom
+        vista={vista}
+        objetivo={objetivo}
+        provinciasGeo={provinciasGeo}
+        onSeleccionarCCAA={onSeleccionarCCAA}
+        onSeleccionarProvincia={onSeleccionarProvincia}
+        onAlejarNivel={onAlejarNivel}
+      />
+
+      <TileLayer
+        url={TESELAS.fisico.url}
+        attribution={TESELAS.atribucion}
+        maxNativeZoom={TESELAS.fisico.zoomMax}
+        zIndex={1}
+      />
+      {/* `zIndex` explícito y no orden de inserción: las dos capas van al mismo
+          `tilePane` y el `multiply` de `.relieve` solo tiene sentido si el
+          color queda debajo. */}
+      <TileLayer
+        url={TESELAS.relieve.url}
+        maxNativeZoom={TESELAS.relieve.zoomMax}
+        className="relieve"
+        zIndex={2}
+      />
+
+      {/* Canarias viaja desplazada +5,2° lon / +7,7° lat para caber en el
+          encuadre (ver `canarias.desplazamiento` en el GeoJSON). Sobre un mapa
+          base real eso la dejaba flotando en océano abierto al oeste de
+          Marruecos, que es sencillamente otro sitio. Este relleno tapa el
+          relieve dentro de la cartela y devuelve al inset su lectura de panel
+          aparte.
+
+          Pane propio y no orden de inserción: los dos irían al mismo
+          `overlayPane`, donde Leaflet reordena por su cuenta y el rectángulo
+          acababa tapando las islas. Con un pane a z-index 350 queda fijado
+          entre las teselas (200) y las superposiciones (400). */}
+      {nacional && (
+        <Pane name="mascara-inset" style={{ zIndex: 350 }}>
+          <Rectangle
+            bounds={CARTELA}
+            interactive={false}
+            pathOptions={{ fill: true, fillColor: colorMar, fillOpacity: 1, stroke: false }}
+          />
+        </Pane>
+      )}
 
       <ChoroplethLayer
         regiones={CCAA_GEO}
@@ -140,6 +247,9 @@ export function SpainMap({
       )}
 
       <LoadingSilhouette cargando={cargando} />
+
+      {/* Solo a nivel nacional: es donde está el primer click posible. */}
+      {nacional && <PistaInicial activo={pistaActiva} />}
 
       {/* Canarias está trasladada al Atlántico: la cartela deja claro que ese
           recuadro es un inset cartográfico y no su posición real. */}
@@ -223,4 +333,75 @@ function Encuadre({
   }, [clave, limites, medida, map, onFin]);
 
   return null;
+}
+
+/**
+ * Sentido inverso de `Encuadre`: allí la vista manda al mapa, aquí el mapa
+ * manda a la vista. `objetivo` es el mismo encuadre al que `Encuadre` acaba
+ * de volar, así que su zoom natural (`getBoundsZoom`) es el punto de partida:
+ * cuando el usuario se aleja de él con la rueda o los botones +/- más allá
+ * de `UMBRAL_ZOOM`, la navegación le sigue el paso en vez de dejarle mirar un
+ * hueco en blanco fuera del nivel que el resto de la interfaz (panel, título,
+ * coropleta) sigue mostrando.
+ *
+ * No hace falta distinguir un zoom del usuario de uno programático: tras un
+ * `flyToBounds`/`fitBounds` el mapa aterriza justo en ese zoom natural (o muy
+ * cerca, según el redondeo de `zoomSnap`), así que el `zoomend` de llegada
+ * nunca cruza el umbral por sí solo.
+ */
+function NavegacionPorZoom({
+  vista,
+  objetivo,
+  provinciasGeo,
+  onSeleccionarCCAA,
+  onSeleccionarProvincia,
+  onAlejarNivel,
+}: {
+  vista: Vista;
+  objetivo: Limites;
+  provinciasGeo: ColeccionRegiones | null;
+  onSeleccionarCCAA: (cod: string) => void;
+  onSeleccionarProvincia: (cod: string) => void;
+  onAlejarNivel: () => void;
+}) {
+  const map = useMap();
+
+  const alCambiarZoom = useCallback(() => {
+    const zoomEncuadre = map.getBoundsZoom(objetivo, false, point(MARGEN));
+    const diferencia = map.getZoom() - zoomEncuadre;
+
+    if (diferencia > UMBRAL_ZOOM) {
+      if (vista.nivel === 'nacional') {
+        const cercana = masCercana(CCAA_GEO.features, map);
+        if (cercana) onSeleccionarCCAA(cercana.properties.cod);
+      } else if (vista.nivel === 'ccaa' && provinciasGeo) {
+        const cercana = masCercana(provinciasGeo.features, map);
+        if (cercana) onSeleccionarProvincia(cercana.properties.cod);
+      }
+      return;
+    }
+
+    if (diferencia < -UMBRAL_ZOOM && vista.nivel !== 'nacional') onAlejarNivel();
+  }, [map, objetivo, vista, provinciasGeo, onSeleccionarCCAA, onSeleccionarProvincia, onAlejarNivel]);
+
+  useMapEvent('zoomend', alCambiarZoom);
+  return null;
+}
+
+/** La región cuya ancla —el mismo punto que usa su rótulo— cae más cerca del centro del mapa. */
+function masCercana(features: FeatureRegion[], map: LeafletMap): FeatureRegion | null {
+  const centro = map.getCenter();
+  let mejor: FeatureRegion | null = null;
+  let distanciaMinima = Infinity;
+
+  for (const f of features) {
+    const [lon, lat] = f.properties.ancla;
+    const distancia = map.distance(centro, { lat, lng: lon });
+    if (distancia < distanciaMinima) {
+      distanciaMinima = distancia;
+      mejor = f;
+    }
+  }
+
+  return mejor;
 }

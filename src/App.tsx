@@ -1,4 +1,4 @@
-import { useDeferredValue, useMemo, useState, type CSSProperties } from 'react';
+import { useCallback, useDeferredValue, useMemo, useState, type CSSProperties } from 'react';
 
 import { Footer } from './components/layout/Footer';
 import { Header } from './components/layout/Header';
@@ -18,6 +18,9 @@ import { contar, cumplenPorRegion, UMBRAL_INICIAL, type Conteo } from './utils/d
 
 const REGIONES = regiones as Regiones;
 const NOMBRE_CCAA = new Map(REGIONES.ccaa.map((c) => [c.cod, c.nombre]));
+
+/** Una vez por pestaña: si ya se ha navegado, la pista inicial no vuelve a salir. */
+const CLAVE_PISTA = 'mapa-interactuado';
 const NOMBRE_PROVINCIA = new Map(REGIONES.provincias.map((p) => [p.cod, p.nombre]));
 
 const porTamano = (a: FilaRegion, b: FilaRegion) =>
@@ -36,6 +39,30 @@ export default function App() {
   const { vista } = nav;
   const provinciasGeo = useProvincias();
   const hoja = useBottomSheet(nav.clave, vista.nivel);
+
+  // Lee sessionStorage una sola vez, en el inicializador: así una pestaña que
+  // ya ha navegado no llega a ver la pista ni un fotograma antes de apagarse.
+  const [pistaActiva, setPistaActiva] = useState(() => !sessionStorage.getItem(CLAVE_PISTA));
+  const apagarPista = useCallback(() => {
+    sessionStorage.setItem(CLAVE_PISTA, '1');
+    setPistaActiva(false);
+  }, []);
+  const alSeleccionarCCAA = useCallback(
+    (cod: string) => {
+      apagarPista();
+      nav.irACCAA(cod);
+    },
+    [apagarPista, nav],
+  );
+  const alSeleccionarProvincia = useCallback(
+    (cod: string) => {
+      apagarPista();
+      nav.irAProvincia(cod);
+    },
+    [apagarPista, nav],
+  );
+  /** El zoom se sale del encuadre del nivel actual hacia fuera (ver `NavegacionPorZoom`). */
+  const alAlejarNivel = useCallback(() => nav.atras(), [nav]);
 
   const [umbral, setUmbral] = useState(UMBRAL_INICIAL);
   // Recontar 42.839 empresas y repintar 52 polígonos en cada píxel del slider
@@ -127,11 +154,15 @@ export default function App() {
   const tapado = hoja.esHoja ? hoja.asomo : 0;
 
   return (
-    // La ventana exacta y nada de scroll de documento, también en móvil: allí
+    // La caja que le den y nada de scroll de documento, también en móvil: allí
     // el panel es una hoja `fixed` y el pie no se dibuja, así que no hay nada
     // que se salga por abajo. Solo hacen scroll los listados.
+    //
+    // `h-full` y no `h-dvh`: suelta la herramienta es la ventana exacta (su
+    // envoltorio en main.tsx pone el `h-dvh`), y dentro de la landing es el
+    // panel que la enmarca quien decide el alto. Nada más cambia aquí.
     <div
-      className="flex h-dvh flex-col overflow-hidden bg-base font-sans text-ink"
+      className="flex h-full flex-col overflow-hidden bg-base font-sans text-ink"
       // Alto del asomo, publicado para que el mapa sepa dónde acabar.
       style={{ '--asomo': `${tapado}px` } as CSSProperties}
     >
@@ -161,8 +192,10 @@ export default function App() {
               cortesCCAA={cortesCCAA}
               cortesProvincias={cortesProvincias}
               cargando={carga.estado === 'cargando'}
-              onSeleccionarCCAA={nav.irACCAA}
-              onSeleccionarProvincia={nav.irAProvincia}
+              pistaActiva={pistaActiva}
+              onSeleccionarCCAA={alSeleccionarCCAA}
+              onSeleccionarProvincia={alSeleccionarProvincia}
+              onAlejarNivel={alAlejarNivel}
             />
           </div>
 
@@ -194,7 +227,7 @@ export default function App() {
           datosListos={recuentos !== null}
           hoja={hoja}
           onCambiarOrden={setOrden}
-          onSeleccionarRegion={vista.nivel === 'nacional' ? nav.irACCAA : nav.irAProvincia}
+          onSeleccionarRegion={vista.nivel === 'nacional' ? alSeleccionarCCAA : alSeleccionarProvincia}
         />
       </main>
 

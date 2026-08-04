@@ -1,5 +1,9 @@
 import { CoverageChip } from '../layout/CoverageChip';
 import { NotaDatos } from '../layout/NotaDatos';
+// Extensión explícita: en un filesystem que no distingue mayúsculas
+// (Windows), './Odometro' colisiona con './odometro.ts' y resuelve al
+// módulo equivocado.
+import { Odometro } from '../../animation/Odometro.tsx';
 import { MapLegend } from '../map/MapLegend';
 import type { Hoja } from '../../hooks/useBottomSheet';
 import type { Orden } from '../../hooks/useFilteredCompanies';
@@ -11,8 +15,6 @@ import { Breadcrumb, type Segmento } from './Breadcrumb';
 import { CompanyPanel } from './CompanyPanel';
 import { RegionList, type FilaRegion } from './RegionList';
 import { SheetHandle } from './SheetHandle';
-
-const nf = new Intl.NumberFormat('es-ES');
 
 /** El asa lo referencia con `aria-controls`. */
 const ID_PANEL = 'panel-consulta';
@@ -92,12 +94,14 @@ export function Sidebar({
           <Breadcrumb segmentos={segmentos} />
 
           <div className="mt-2 flex items-baseline justify-between gap-3">
-            <h2 className="rotulo truncate text-heading leading-tight">{titulo}</h2>
+            <h2 className="rotulo truncate text-heading leading-tight">
+              {titulo}
+            </h2>
             <p
               className="shrink-0 font-mono text-body-sm tabular-nums text-asfalto"
               aria-live="polite"
             >
-              {conteo === null ? '—' : nf.format(conteo.cumplen)}
+              <Odometro valor={conteo === null ? null : conteo.cumplen} mecanica="columna" />
               <span className="ml-1.5 font-sans text-caption">
                 {umbral === 0 ? 'con dato' : `≥ ${umbral} empl.`}
               </span>

@@ -20,7 +20,7 @@ export function Breadcrumb({ segmentos }: { segmentos: Segmento[] }) {
               <button
                 type="button"
                 onClick={segmento.onVolver}
-                className="text-panel underline-offset-2 hover:underline"
+                className="text-atencion underline-offset-2 hover:underline"
               >
                 {segmento.etiqueta}
               </button>

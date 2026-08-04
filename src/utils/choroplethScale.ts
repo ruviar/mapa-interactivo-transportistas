@@ -61,7 +61,7 @@ export function leerPaleta(): Paleta {
   return {
     relleno: mapear(VAR_PASO),
     cifra: mapear(VAR_CIFRA),
-    borde: valor('--color-ink'),
+    borde: valor('--color-asfalto'),
     fondo: valor('--color-mar'),
     atencion: valor('--color-atencion'),
   };
