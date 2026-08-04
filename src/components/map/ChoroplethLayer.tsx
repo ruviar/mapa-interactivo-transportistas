@@ -26,6 +26,22 @@ const ALTO_ROTULO = 30;
  */
 const MAPA_APRETADO = { ancho: 520, alto: 420 };
 
+/**
+ * Opacidad del relleno sobre el mapa base (ver `TESELAS` en SpainMap.tsx). Es
+ * el mando para repartir protagonismo entre el dato y el paisaje.
+ *
+ * Subió de 0.75 a 0.92 al cambiar el terreno lavado de `World_Terrain_Base`
+ * por un mapa físico en color: a 0.75 el verde y el ocre de debajo ya no
+ * matizaban el relleno, lo teñían, y el paso 2 de una región de montaña dejaba
+ * de ser el mismo color que el paso 2 de la leyenda. Y una coropleta cuyo
+ * color no se puede cotejar con su leyenda no es una coropleta.
+ *
+ * A 0.92 el reparto queda explícito: dentro de España se lee el dato, fuera se
+ * lee el terreno. Queda el 8% justo para que el relieve module la superficie y
+ * las regiones no se vean recortadas en cartulina.
+ */
+const OPACIDAD_COROPLETA = 0.92;
+
 interface Props {
   regiones: ColeccionRegiones;
   /** Empresas que cumplen el filtro por código de región. `null` mientras carga. */
@@ -66,7 +82,16 @@ export function ChoroplethLayer({ regiones, recuentos, cortes, modo, onSeleccion
     return (paso: PasoCoropleta): PathOptions =>
       modo === 'contexto'
         ? { className: 'region', fillColor: paleta.relleno[0], fillOpacity: 0.25, color: paleta.borde, weight: 0.5, opacity: 0.3 }
-        : { className: 'region', fillColor: paleta.relleno[paso], fillOpacity: 1, color: paleta.borde, weight: 0.5, opacity: 0.4 };
+        : {
+            className: 'region',
+            fillColor: paleta.relleno[paso],
+            // Casi opaca: el color tiene que ser cotejable con la leyenda, y el
+            // resto lo deja pasar el relieve (ver `OPACIDAD_COROPLETA`).
+            fillOpacity: OPACIDAD_COROPLETA,
+            color: paleta.borde,
+            weight: 0.5,
+            opacity: 0.4,
+          };
   }, [modo, paleta]);
 
   // `style` solo se evalúa al crear las capas; al cambiar el umbral o el nivel
@@ -95,15 +120,21 @@ export function ChoroplethLayer({ regiones, recuentos, cortes, modo, onSeleccion
     if (elementos.length === 0) return;
 
     gsap.set(elementos, { transformOrigin: '50% 50%' });
-    const animacion = gsap.from(elementos, {
-      opacity: 0,
-      scale: 0.9,
-      duration: 0.4,
-      stagger: 0.05,
-      ease: 'power2.out',
-    });
+    // `fromTo` y no `from`: `from` toma como destino el valor que el elemento
+    // tenga en ese momento. Si una pasada anterior quedó cortada a media
+    // opacidad —lo que hace StrictMode al montar, limpiar y volver a montar—,
+    // ese 0 se convertía en el destino y la región no volvía a aparecer nunca.
+    // Con el destino escrito, la animación siempre acaba en visible.
+    const animacion = gsap.fromTo(
+      elementos,
+      { opacity: 0, scale: 0.9 },
+      { opacity: 1, scale: 1, duration: 0.4, stagger: 0.05, ease: 'power2.out' },
+    );
     return () => {
-      animacion.kill();
+      // Completar antes de soltar: un `kill()` a secas congela cada elemento
+      // donde le pille el escalonado, y con 19 regiones a 0.05 s la mayoría ni
+      // ha empezado. El mapa se quedaba medio en blanco.
+      animacion.progress(1).kill();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

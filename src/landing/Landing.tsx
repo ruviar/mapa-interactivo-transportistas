@@ -1,8 +1,5 @@
-import { useScroll } from 'motion/react';
-import { useRef } from 'react';
-
 import { ScrollSuave } from './scroll/ScrollSuave';
-import { ComoFunciona } from './secciones/ComoFunciona';
+import { AsiFuncionaElMapa } from './secciones/AsiFuncionaElMapa';
 import { Contacto } from './secciones/Contacto';
 import { Hero } from './secciones/Hero';
 import { Navegacion } from './secciones/Navegacion';
@@ -16,26 +13,15 @@ import { SeccionMapa } from './secciones/SeccionMapa';
  * lejos de su rueda (ver `SeccionMapa`).
  */
 export function Landing() {
-  const hero = useRef<HTMLDivElement>(null);
-
-  // 0 con el hero encuadrado, 1 cuando su borde inferior alcanza el alto de la
-  // ventana: exactamente el tramo en que el hero se va y el mapa llega.
-  const { scrollYProgress: salidaHero } = useScroll({
-    target: hero,
-    offset: ['start start', 'end start'],
-  });
-
   return (
     <div className="bg-base font-sans text-ink">
       <ScrollSuave />
       <Navegacion />
 
       <main>
-        <div ref={hero}>
-          <Hero salida={salidaHero} />
-        </div>
+        <Hero />
+        <AsiFuncionaElMapa />
         <SeccionMapa />
-        <ComoFunciona />
         <PorQue />
         <Contacto />
       </main>

@@ -1,5 +1,5 @@
 import { ChevronDown } from 'lucide-react';
-import { motion, useInView, useMotionValue, useTransform, type MotionValue } from 'motion/react';
+import { motion, useInView, useMotionValue, useScroll, useTransform } from 'motion/react';
 import { useLayoutEffect, useRef } from 'react';
 
 import { useMenosMovimiento } from '../../animation/fisica';
@@ -51,21 +51,23 @@ const MASCARA_FOTO =
  * madrugada arriba, el amanecer abriéndose por abajo, y la red de corredores
  * dibujándose a la derecha mientras el titular ocupa la columna izquierda.
  */
-interface Props {
-  /**
-   * Progreso de salida del hero (0 arriba del todo, 1 cuando ya se ha ido).
-   * Lo calcula la landing con `useScroll`; en el banco de pruebas no llega
-   * ninguno y entonces el hero se queda quieto, que es lo que se quiere ahí.
-   */
-  salida?: MotionValue<number>;
-}
-
-export function Hero({ salida }: Props) {
+export function Hero() {
   const quieto = useMenosMovimiento();
+
+  // Progreso de salida del hero: 0 con el hero encuadrado, 1 cuando su borde
+  // inferior alcanza el alto de la ventana — exactamente el tramo en que el
+  // hero se va. Con `target` propio y no recibido por prop: nada más en la
+  // página necesita ya este valor (dejó de haberlo desde que `SeccionMapa`
+  // perdió el scrollytelling), así que vive donde se usa.
+  const heroRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ['start start', 'end start'],
+  });
   // Los hooks no pueden ir detrás de un `if`, así que el valor de repuesto se
-  // crea siempre y solo se usa cuando no llega el de verdad.
+  // crea siempre y solo se usa cuando alguien ha pedido menos movimiento.
   const parado = useMotionValue(0);
-  const progreso = quieto ? parado : (salida ?? parado);
+  const progreso = quieto ? parado : scrollYProgress;
 
   // La red converge hacia su propio nudo y se apaga; el texto se queda un poco
   // atrás. Solo `transform` y `opacity`: cualquier otra propiedad aquí obliga
@@ -138,6 +140,7 @@ export function Hero({ salida }: Props) {
      * mide ~4,5rem: por debajo de eso el texto se le metería debajo.
      */
     <section
+      ref={heroRef}
       className="relative isolate flex min-h-dvh flex-col justify-center overflow-hidden px-5 py-[clamp(5.5rem,11vh,7.5rem)] sm:px-8"
       style={{ background: AMANECER }}
     >
@@ -184,11 +187,16 @@ export function Hero({ salida }: Props) {
         <RedDeRutas className="h-full w-full" />
       </motion.div>
 
+      {/* Más ancho que el `max-w-6xl` del resto de secciones a propósito: con
+          aquel, en una pantalla de 1920 el texto arrancaba a 384 px del borde
+          y se plantaba encima del nudo de rutas y de la curva de la autopista.
+          Al ensanchar el contenedor el bloque se va hacia el margen y libera
+          la mitad derecha, que es donde está el dibujo. */}
       <motion.div
-        className="mx-auto w-full max-w-6xl"
+        className="mx-auto w-full max-w-[96rem]"
         style={{ y: desplazamiento, opacity: opacidadTexto }}
       >
-        <div className="max-w-2xl">
+        <div className="max-w-xl">
           <Revelar modo="entrada">
             <p className="font-mono text-caption uppercase tracking-[0.22em] text-base/70">
               Transporte de mercancías por carretera · España

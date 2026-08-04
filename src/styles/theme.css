@@ -157,12 +157,50 @@ html {
   color: var(--color-ink);
 }
 
+/**
+ * Tarjeta de la landing (`piezas/Tarjeta.tsx`, hoy solo en `PorQue`). No se
+ * mueve al apuntarla: es un bloque de texto para leer, no un control, y el
+ * levantamiento con giro 3D que llevaba hacía bailar cuatro párrafos mientras
+ * el ojo intentaba recorrerlos. En su lugar se enciende —filete ámbar y un
+ * halo del mismo ámbar en dos radios, cerca y lejos, que es lo que da el
+ * aspecto de neón y no una sombra de color plana.
+ *
+ * Solo color y luz, ningún desplazamiento: por eso no necesita rama para
+ * `prefers-reduced-motion`, a diferencia de `Accion` o `Revelar`.
+ */
+.tarjeta {
+  transition:
+    border-color 200ms ease,
+    box-shadow 200ms ease;
+}
+.tarjeta:hover {
+  border-color: var(--color-atencion);
+  box-shadow:
+    0 0 0 1px var(--color-atencion),
+    0 0 10px -1px color-mix(in srgb, var(--color-atencion) 70%, transparent),
+    0 0 30px -4px color-mix(in srgb, var(--color-atencion) 45%, transparent);
+}
+
 /* ---------------------------------------------------------------- Mapa --- */
 
-/* Sin teselas: el "mar" es el fondo del propio contenedor del mapa. */
+/* El mar del tema se ve mientras cargan las teselas y bajo la cartela canaria;
+   el mar definitivo lo pinta la batimetría del mapa físico (ver `TESELAS`). */
 .leaflet-container {
   background: var(--color-mar);
   font-family: var(--font-sans);
+}
+
+/**
+ * Capa de relieve sombreado sobre el mapa físico en color (`TESELAS` en
+ * SpainMap.tsx). `multiply` y no una opacidad a secas: el hillshade es gris,
+ * así que superpuesto en normal lava el verde y el ocre de debajo, mientras
+ * que multiplicando solo oscurece las laderas en sombra y el color se queda
+ * donde estaba. El 0.55 es lo que separa un terreno modelado de un mapa
+ * ennegrecido —el físico ya trae algo de sombreado propio y las dos se suman.
+ */
+.relieve {
+  mix-blend-mode: multiply;
+  opacity: 0.55;
 }
 
 /* El relleno lo escribe Leaflet en el atributo `fill`; aquí solo se anima

@@ -44,6 +44,16 @@ lleva además la cifra visible (accesibilidad), no solo color:
 5º cuantil   → #16305A (navy, máxima densidad)
 ```
 
+Debajo de la coropleta hay un mapa base físico de verdad (Esri
+`World_Physical_Map` para el color + `World_Hillshade` en `multiply` para la
+sombra del terreno, ver `TESELAS` en `SpainMap.tsx`), no el terreno lavado de
+antes. El reparto es el de una carta: **dentro de España manda el dato** —el
+relleno va al 92% de opacidad para que el color siga siendo cotejable con su
+casilla de leyenda— y **fuera manda el terreno**, que es lo único que ese
+territorio tiene que contar. Portugal, Francia o el Magreb con su verde y su
+ocre no son decoración: son lo que hace que España se lea como un país en un
+mapa y no como una silueta recortada.
+
 ## Tipografía
 
 Sin cambios respecto a la versión anterior — ya cumplía lo que pediría
@@ -70,7 +80,7 @@ cualquier brief nuevo:
 ## El hilo conductor
 
 Una carretera como línea que conecta, con el mismo significado cada vez que
-aparece — tres apariciones y ninguna más:
+aparece — dos apariciones y ninguna más:
 
 1. **Hero** (`RedDeRutas.tsx`): corredores radiales que se dibujan solos al
    cargar, con paradas que pulsan una vez al llegar la línea.
@@ -80,18 +90,26 @@ aparece — tres apariciones y ninguna más:
    perímetro de `RouteTraceOverlay.tsx` (que sigue marcando la selección
    sobre el propio mapa); no lo sustituye — son dos lecturas del mismo
    motivo, una sobre el mapa y otra hacia el panel.
-3. **Cómo funciona** (`ComoFunciona.tsx`): una guía horizontal conecta los
-   pasos 01→02→03, dibujándose según el scroll.
 
 No se multiplica en más sitios. Un momento bien ejecutado pesa más que diez
-animaciones sueltas.
+animaciones sueltas. (Hubo una tercera aparición —una guía horizontal
+dibujándose a scroll en la antigua `ComoFunciona.tsx`— retirada junto con esa
+sección: ver `AsiFuncionaElMapa.tsx`, su reemplazo por capturas.)
 
 ## Animación
 
 - **Motion** gobierna las micro-interacciones existentes: `Accion`,
-  `Tarjeta`, `Revelar`, `Odometro`, la salida del hero por scroll. Física
-  propia en `animation/resortes.ts` — un muelle por intención (elevación,
-  pulsación, odómetro, trazado), no valores sueltos en cada componente.
+  `Revelar`, `Odometro`, la salida del hero por scroll. Física propia en
+  `animation/resortes.ts` — un muelle por intención (elevación, pulsación,
+  odómetro, trazado), no valores sueltos en cada componente.
+- **Se mueve lo que se acciona, se enciende lo que se lee.** `Tarjeta` llevaba
+  la misma elevación con giro 3D que `Accion` y se le quitó: son cuatro
+  bloques de texto de la sección "Por qué", y levantarlos bajo el cursor
+  prometía un click que no existe además de mover el párrafo justo cuando el
+  ojo lo estaba recorriendo. En su lugar se encienden en ámbar de neón
+  —filete más halo en dos radios, clase `.tarjeta` en `theme.css`— y el icono
+  se enciende con ellas por `group-hover`. Solo color y luz: no hay nada que
+  reducir bajo `prefers-reduced-motion`, así que la pieza no necesita rama.
 - **GSAP** (`animation/gsap.ts`, registro único de plugins — todos gratuitos
   desde la compra de Webflow) entra donde Motion no llega bien:
   - `SplitText`: entrada por palabras del titular del hero. Único uso del sitio.
@@ -101,11 +119,12 @@ animaciones sueltas.
     (`react-window`) y puede traer miles de filas; Flip necesita elementos
     DOM estables para medir, y con filas recicladas no hay "antes" que
     comparar.
-  - `DrawSVG`: la guía de `ComoFunciona` y el conector mapa→listado.
-  - `ScrollTrigger`, sin `pin`: la sección del mapa usa `position: sticky`
-    para el anclaje visual (cero dependencia de sincronizar con Lenis) y
-    triggers sueltos (`onEnter`/`onEnterBack`) solo para detectar qué paso
-    está a la vista y pilotar el mapa real vía la prop `demo` de `App`.
+  - `DrawSVG`: el conector mapa→listado (`ConectorSeleccion.tsx`).
+  - `ScrollTrigger`: registrado en `animation/gsap.ts` pero sin uso actual —
+    lo llevaba el scrollytelling de la antigua `SeccionMapa` (pilotaba el
+    mapa real vía una prop `demo` de `App` según el paso a la vista), retirado
+    junto con `ComoFunciona` a favor de `AsiFuncionaElMapa` y una `SeccionMapa`
+    de marco fijo, sin demo.
 - El trazado de firma (`RouteTraceOverlay`, muelle `RESORTE_TRAZADO`) y el
   cambio de color de la coropleta (200ms, `.region` en `theme.css`) no han
   cambiado de mecanismo, solo de paleta.

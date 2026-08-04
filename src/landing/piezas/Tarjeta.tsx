@@ -1,42 +1,26 @@
-import { motion } from 'motion/react';
-import { useState, type ReactNode } from 'react';
-
-import { useSombras } from '../../animation/elevacion';
-import { useMenosMovimiento } from '../../animation/fisica';
-import { RESORTE_ELEVACION } from '../../animation/resortes';
+import type { ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;
   className?: string;
+  /** Superficie navy-800 y borde claro en vez de crema — tarjetas sobre secciones oscuras (`PorQue`). */
+  oscuro?: boolean;
 }
 
 /**
- * Tarjeta con la misma física de elevación que el resto de la interfaz
- * (`Pulsable`, `Accion`): se levanta al apuntarla —traslación en Y y sombra
- * creciente, no un `scale`— y vuelve con el muelle de `RESORTE_ELEVACION`
- * de `animation/resortes.ts`. Nunca antes de la interacción: no hay bucle
- * decorativo aquí, solo respuesta a que alguien la ha mirado.
+ * Tarjeta de la landing. A diferencia de `Accion` o `Pulsable`, aquí no hay
+ * física: la tarjeta no se levanta, no gira y no se hunde. Es un bloque de
+ * texto que se lee, no un control que se acciona, y darle el mismo gesto de
+ * elevación equivalía a prometer un click que no existe —además de mover el
+ * párrafo justo cuando el cursor llega a él.
+ *
+ * Al apuntarla se enciende en ámbar de neón (`.tarjeta` en `theme.css`, filete
+ * más halo). Como todo el efecto es color y luz, no hace falta la rama de
+ * `useMenosMovimiento` que sí llevan las piezas con desplazamiento: no hay
+ * nada que reducir.
  */
-export function Tarjeta({ children, className = '' }: Props) {
-  const quieto = useMenosMovimiento();
-  const sombras = useSombras();
-  const [realzada, setRealzada] = useState(false);
+export function Tarjeta({ children, className = '', oscuro = false }: Props) {
+  const superficie = oscuro ? 'border-base/15 bg-navy-800' : 'border-asfalto/25 bg-base';
 
-  const base = `border border-asfalto/25 bg-base p-6 ${className}`;
-
-  if (quieto) {
-    return <div className={base}>{children}</div>;
-  }
-
-  return (
-    <motion.div
-      className={base}
-      onHoverStart={() => setRealzada(true)}
-      onHoverEnd={() => setRealzada(false)}
-      animate={{ y: realzada ? -4 : 0, boxShadow: realzada ? sombras.alta : sombras.apoyo }}
-      transition={RESORTE_ELEVACION}
-    >
-      {children}
-    </motion.div>
-  );
+  return <div className={`tarjeta border ${superficie} p-6 ${className}`}>{children}</div>;
 }

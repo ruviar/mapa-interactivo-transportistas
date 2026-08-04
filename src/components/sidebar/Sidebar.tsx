@@ -1,5 +1,3 @@
-import type { RefObject } from 'react';
-
 import { CoverageChip } from '../layout/CoverageChip';
 import { NotaDatos } from '../layout/NotaDatos';
 // Extensión explícita: en un filesystem que no distingue mayúsculas
@@ -38,8 +36,6 @@ interface Props {
   ambitoCoropleta: string;
   datosListos: boolean;
   hoja: Hoja;
-  /** Punto de llegada de `ConectorSeleccion` — vive fuera de este árbol. */
-  refTitulo?: RefObject<HTMLHeadingElement | null>;
   onCambiarOrden: (orden: Orden) => void;
   onSeleccionarRegion: (cod: string) => void;
 }
@@ -70,7 +66,6 @@ export function Sidebar({
   ambitoCoropleta,
   datosListos,
   hoja,
-  refTitulo,
   onCambiarOrden,
   onSeleccionarRegion,
 }: Props) {
@@ -99,7 +94,7 @@ export function Sidebar({
           <Breadcrumb segmentos={segmentos} />
 
           <div className="mt-2 flex items-baseline justify-between gap-3">
-            <h2 ref={refTitulo} className="rotulo truncate text-heading leading-tight">
+            <h2 className="rotulo truncate text-heading leading-tight">
               {titulo}
             </h2>
             <p

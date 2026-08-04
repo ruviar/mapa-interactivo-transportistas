@@ -1,4 +1,7 @@
+import { IMAGENES } from '../datos/imagenes';
 import { Accion } from '../piezas/Accion';
+import { Grano } from '../piezas/Grano';
+import { ImagenODefecto } from '../piezas/ImagenODefecto';
 import { Revelar } from '../piezas/Revelar';
 
 /**
@@ -11,8 +14,10 @@ const CORREO_PLACEHOLDER = 'contacto@ejemplo.com';
 
 export function Contacto() {
   return (
-    <section id="contacto" className="bg-base px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-      <div className="mx-auto grid max-w-6xl gap-10 border-t border-asfalto/25 pt-10 lg:grid-cols-2 lg:items-center lg:gap-16">
+    <section id="contacto" className="relative isolate overflow-hidden bg-base px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+      <Grano className="-z-10" />
+
+      <div className="relative mx-auto grid max-w-6xl gap-10 border-t border-asfalto/25 pt-10 lg:grid-cols-2 lg:items-center lg:gap-16">
         <Revelar>
           <div className="max-w-2xl">
             <p className="font-mono text-caption uppercase tracking-[0.2em] text-asfalto">
@@ -31,18 +36,23 @@ export function Contacto() {
           </div>
         </Revelar>
 
-        {/* Placeholder de imagen (nave logística, ver brief) — sin foto real
-            generada esta sesión. Gradiente navy→ámbar sobre el mismo mar de
-            carta náutica del mapa, para que el hueco no desentone mientras no
-            haya una fotografía que ponerle. Bloque puramente decorativo. */}
+        {/* `contactoFondo`: retrovisor de un camión sobre carretera española
+            (ver `datos/imagenes.ts`). Mientras el archivo no esté, el mismo
+            degradado navy→mar de siempre hace de respaldo, así el hueco no
+            desentona. Bloque puramente decorativo. */}
         <Revelar retardo={0.1} className="hidden aspect-[4/3] overflow-hidden rounded-xl lg:block">
-          <div
-            aria-hidden="true"
-            className="h-full w-full"
-            style={{
-              background:
-                'radial-gradient(120% 100% at 20% 0%, var(--color-mar) 0%, var(--color-navy-800) 55%, var(--color-navy-950) 100%)',
-            }}
+          <ImagenODefecto
+            imagen={IMAGENES.contactoFondo}
+            className="h-full w-full object-cover"
+            respaldo={
+              <div
+                className="h-full w-full"
+                style={{
+                  background:
+                    'radial-gradient(120% 100% at 20% 0%, var(--color-mar) 0%, var(--color-navy-800) 55%, var(--color-navy-950) 100%)',
+                }}
+              />
+            }
           />
         </Revelar>
       </div>
