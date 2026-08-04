@@ -25,9 +25,6 @@ export function PieDePagina() {
         </div>
 
         <nav className="flex gap-6 text-body-sm">
-          <a href="#mapa" className="hover:text-base">
-            El mapa
-          </a>
           <a href="#contacto" className="hover:text-base">
             Contacto
           </a>
@@ -39,7 +36,7 @@ export function PieDePagina() {
             }}
             className="hover:text-base"
           >
-            Herramienta a pantalla completa
+            Ir al mapa
           </a>
         </nav>
       </div>

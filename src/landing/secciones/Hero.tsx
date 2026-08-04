@@ -8,6 +8,7 @@ import { useMenosMovimiento } from '../../animation/fisica';
 // módulo equivocado.
 import { Odometro } from '../../animation/Odometro.tsx';
 import { gsap, SplitText } from '../../animation/gsap';
+import { useIrAVista } from '../../Raiz';
 import { IMAGENES } from '../datos/imagenes';
 import { Accion } from '../piezas/Accion';
 import { ImagenODefecto } from '../piezas/ImagenODefecto';
@@ -53,6 +54,7 @@ const MASCARA_FOTO =
  */
 export function Hero() {
   const quieto = useMenosMovimiento();
+  const irAVista = useIrAVista();
 
   // Progreso de salida del hero: 0 con el hero encuadrado, 1 cuando su borde
   // inferior alcanza el alto de la ventana — exactamente el tramo en que el
@@ -220,8 +222,15 @@ export function Hero() {
 
           <Revelar modo="entrada" retardo={0.3}>
             <div className="mt-[clamp(1.5rem,4vh,2.5rem)] flex flex-wrap items-center gap-3">
-              <Accion href="#mapa" magnetico>
-                Explorar el mapa
+              <Accion
+                href="?app"
+                onClick={(e) => {
+                  e.preventDefault();
+                  irAVista('app');
+                }}
+                magnetico
+              >
+                Ir al mapa
               </Accion>
               <Accion href="#contacto" tono="contorno" magnetico>
                 Hablar con nosotros

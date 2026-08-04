@@ -1,11 +1,10 @@
 import { useMotionValueEvent, useScroll } from 'motion/react';
 import { useState } from 'react';
 
+import { useIrAVista } from '../../Raiz';
 import { Accion } from '../piezas/Accion';
 
 const ENLACES = [
-  { href: '#asi-funciona', etiqueta: 'Cómo funciona' },
-  { href: '#mapa', etiqueta: 'Mapa' },
   { href: '#por-que', etiqueta: 'El sector' },
   { href: '#contacto', etiqueta: 'Contacto' },
 ] as const;
@@ -31,6 +30,7 @@ const UMBRAL_FONDO = 80;
 export function Navegacion() {
   const { scrollY } = useScroll();
   const [conFondo, setConFondo] = useState(false);
+  const irAVista = useIrAVista();
 
   useMotionValueEvent(scrollY, 'change', (y) => setConFondo(y > UMBRAL_FONDO));
 
@@ -70,8 +70,15 @@ export function Navegacion() {
           ))}
         </nav>
 
-        <Accion href="#mapa" className="hidden justify-self-end sm:inline-flex">
-          Explorar el mapa
+        <Accion
+          href="?app"
+          onClick={(e) => {
+            e.preventDefault();
+            irAVista('app');
+          }}
+          className="hidden justify-self-end sm:inline-flex"
+        >
+          Ir al mapa
         </Accion>
       </div>
     </header>

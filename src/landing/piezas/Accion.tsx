@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
 
 import { useSombras } from '../../animation/elevacion';
 import { useMenosMovimiento } from '../../animation/fisica';
@@ -25,6 +25,8 @@ interface Props {
   className?: string;
   /** Solo para los 2 CTA del hero — ver DESIGN_SYSTEM.md, no se generaliza. */
   magnetico?: boolean;
+  /** Para los CTA que saltan de vista (landing → herramienta) en vez de anclar. */
+  onClick?: (e: ReactMouseEvent<HTMLAnchorElement>) => void;
 }
 
 /**
@@ -34,8 +36,9 @@ interface Props {
  * el mismo error que escribir un hex suelto en un componente.
  *
  * `Pulsable` no vale porque es un `<button>` y estas son anclas —el CTA
- * principal salta a #mapa y el secundario a contacto—, pero el gesto es el
- * mismo: se levanta al apuntarla y se hunde al pulsarla.
+ * principal salta a la herramienta a pantalla completa y el secundario a
+ * contacto—, pero el gesto es el mismo: se levanta al apuntarla y se hunde al
+ * pulsarla.
  *
  * El magnetismo va en un `<span>` envoltorio y no en el propio `motion.a`: el
  * `animate` de Motion ya gobierna su `y` (el lift al apuntarlo) y reescribe el
@@ -44,7 +47,14 @@ interface Props {
  * imán en el que lo envuelve, cada una escribe su propio `transform` y no hay
  * conflicto.
  */
-export function Accion({ href, tono = 'atencion', children, className = '', magnetico = false }: Props) {
+export function Accion({
+  href,
+  tono = 'atencion',
+  children,
+  className = '',
+  magnetico = false,
+  onClick,
+}: Props) {
   const quieto = useMenosMovimiento();
   const sombras = useSombras();
   const [realzada, setRealzada] = useState(false);
@@ -86,7 +96,7 @@ export function Accion({ href, tono = 'atencion', children, className = '', magn
 
   if (quieto) {
     return (
-      <a href={href} className={clases}>
+      <a href={href} onClick={onClick} className={clases}>
         {children}
       </a>
     );
@@ -95,6 +105,7 @@ export function Accion({ href, tono = 'atencion', children, className = '', magn
   const boton = (
     <motion.a
       href={href}
+      onClick={onClick}
       className={clases}
       onHoverStart={() => setRealzada(true)}
       onHoverEnd={() => setRealzada(false)}

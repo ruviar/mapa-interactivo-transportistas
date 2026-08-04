@@ -1,16 +1,14 @@
 import { ScrollSuave } from './scroll/ScrollSuave';
-import { AsiFuncionaElMapa } from './secciones/AsiFuncionaElMapa';
 import { Contacto } from './secciones/Contacto';
 import { Hero } from './secciones/Hero';
 import { Navegacion } from './secciones/Navegacion';
 import { PieDePagina } from './secciones/PieDePagina';
 import { PorQue } from './secciones/PorQue';
-import { SeccionMapa } from './secciones/SeccionMapa';
 
 /**
- * La página. El mapa es una sección más y no se le cambia nada por dentro: lo
- * único que la landing le da es una caja y el atributo que mantiene a Lenis
- * lejos de su rueda (ver `SeccionMapa`).
+ * La página. El mapa ya no vive aquí: es la herramienta a pantalla completa
+ * detrás de `?app` (ver `Raiz.tsx`), a la que se llega con los enlaces "Ir al
+ * mapa" del `Hero` y la navegación, no con una sección embebida en el scroll.
  */
 export function Landing() {
   return (
@@ -20,8 +18,6 @@ export function Landing() {
 
       <main>
         <Hero />
-        <AsiFuncionaElMapa />
-        <SeccionMapa />
         <PorQue />
         <Contacto />
       </main>

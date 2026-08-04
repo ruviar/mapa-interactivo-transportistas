@@ -28,27 +28,6 @@ export interface Imagen {
 }
 
 export const IMAGENES = {
-  mapaEspana: {
-    archivo: 'mapa-nivel-espana.png',
-    alt: 'El mapa en su vista inicial, con las diecisiete comunidades autónomas coloreadas por densidad de empresas.',
-    origen: 'captura',
-    instruccion:
-      'Vista inicial contra el servidor de desarrollo: España entera, las 17 CCAA visibles, sin cursor ni barra de navegador.',
-  },
-  mapaProvincia: {
-    archivo: 'mapa-nivel-provincia.png',
-    alt: 'El mapa tras elegir una comunidad autónoma, mostrando sus provincias por separado.',
-    origen: 'captura',
-    instruccion:
-      'Tras hacer clic en una comunidad. Usar Cataluña o Andalucía: son las de mayor densidad y la coropleta se lee bien.',
-  },
-  mapaListado: {
-    archivo: 'mapa-listado-empresas.png',
-    alt: 'Una provincia seleccionada con el panel lateral abierto y el listado de empresas a la vista.',
-    origen: 'captura',
-    instruccion:
-      'Tras hacer clic en una provincia, con el panel de empresas abierto y el slider de umbral visible con su burbuja de valor.',
-  },
   heroFondo: {
     archivo: 'hero-bg.jpg',
     alt: '',

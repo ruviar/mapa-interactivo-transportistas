@@ -8,21 +8,12 @@ esté (`src/landing/piezas/ImagenODefecto.tsx`).
 Ninguna se generó en la sesión en que se escribió esta iteración: no había ni
 generación de imágenes ni herramienta de captura de navegador disponibles.
 
-## A. Capturas del producto
+La landing ya no explica el mapa con capturas ni lo embebe en el scroll: el
+mapa es la herramienta a pantalla completa (`?app`), a la que se llega con los
+enlaces "Ir al mapa". Por eso aquí solo quedan las imágenes generadas de
+fondo.
 
-Del propio mapa corriendo (`npm run dev`), **no generadas**. Limpias: sin
-cursor, sin barra de navegador, sin devtools. Ventana a 1440×900 o más, y a
-`devicePixelRatio` 2 si puedes — se ven dentro de un marco de navegador falso
-en pantallas grandes.
-
-| Archivo | Qué encuadrar |
-|---|---|
-| `mapa-nivel-espana.png` | Vista inicial: España entera, las 17 CCAA visibles. |
-| `mapa-nivel-provincia.png` | Tras clic en una comunidad. Usa **Cataluña o Andalucía**: son las de mayor densidad y la coropleta se lee bien. |
-| `mapa-listado-empresas.png` | Tras clic en una provincia, con el panel de empresas abierto. |
-| `mapa-umbral-slider.png` | *(opcional)* El slider de umbral en uso con la burbuja de valor. **Si ya sale visible en `mapa-listado-empresas.png`, no hace falta** — la sección solo usa tres capturas y ésa es la reutilizada. |
-
-## B. Imágenes generadas
+## Imágenes generadas
 
 Fotográficas / atmosféricas. Prompts literales, para pegar tal cual.
 
@@ -52,7 +43,7 @@ detalle.
 
 Apoyo visual de la sección de contacto, en formato 4/3.
 
-## C. Por código, no generada
+## Por código, no generada
 
 La textura de grano (`feTurbulence`, opacidad 4%) **no es un archivo**: vive
 como utilidad `grano` en `src/styles/theme.css` y se aplica con la pieza
@@ -60,7 +51,6 @@ como utilidad `grano` en `src/styles/theme.css` y se aplica con la pieza
 
 ## Formato
 
-JPEG de calidad ~80 para las generadas (son fondos, y pesan bastante menos que
-un PNG); PNG para las capturas, que tienen texto y bordes duros. Si alguna
-generada acaba pesando más de ~400 kB, conviene pasarla por un compresor antes
-de commitearla.
+JPEG de calidad ~80 (son fondos, y pesan bastante menos que un PNG). Si alguna
+acaba pesando más de ~400 kB, conviene pasarla por un compresor antes de
+commitearla.
