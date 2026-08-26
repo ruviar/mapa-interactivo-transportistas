@@ -3,20 +3,30 @@ import { useId } from 'react';
 interface Props {
   consulta: string;
   onCambiar: (consulta: string) => void;
+  /** Texto del placeholder; por defecto el del buscador de provincia. */
+  placeholder?: string;
+  /** Etiqueta accesible; por defecto la del buscador de provincia. */
+  etiqueta?: string;
 }
 
 /**
  * Buscador del listado. `type="search"` para que el navegador ofrezca el
  * borrado nativo donde exista, más una cruz propia y Escape para vaciarlo sin
- * soltar el teclado.
+ * soltar el teclado. Lo usan el buscador de provincia y el global de España,
+ * cada uno con su placeholder y su etiqueta.
  */
-export function SearchBox({ consulta, onCambiar }: Props) {
+export function SearchBox({
+  consulta,
+  onCambiar,
+  placeholder = 'Buscar por nombre, NIF o localidad…',
+  etiqueta = 'Buscar empresa por nombre, NIF o localidad',
+}: Props) {
   const id = useId();
 
   return (
     <div className="relative shrink-0 border-b border-asfalto/40">
       <label htmlFor={id} className="sr-only">
-        Buscar empresa por nombre, NIF o localidad
+        {etiqueta}
       </label>
 
       <input
@@ -30,7 +40,7 @@ export function SearchBox({ consulta, onCambiar }: Props) {
             onCambiar('');
           }
         }}
-        placeholder="Buscar por nombre, NIF o localidad…"
+        placeholder={placeholder}
         autoComplete="off"
         spellCheck={false}
         className="w-full bg-transparent px-4 py-2.5 pr-9 text-body-sm placeholder:text-asfalto focus-visible:outline-offset-[-2px] [&::-webkit-search-cancel-button]:hidden"

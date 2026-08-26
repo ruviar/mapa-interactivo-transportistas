@@ -1,4 +1,11 @@
-import { useCallback, useDeferredValue, useMemo, useState, type CSSProperties } from 'react';
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+} from 'react';
 
 import { Footer } from './components/layout/Footer';
 import { Header } from './components/layout/Header';
@@ -12,9 +19,18 @@ import { ORDEN_INICIAL, useFilteredCompanies, type Orden } from './hooks/useFilt
 import { useMapNavigation } from './hooks/useMapNavigation';
 import { useProvincias } from './hooks/useProvincias';
 import regiones from './data/regiones.json';
-import type { Regiones } from './types/company';
+import type { Empresa, Regiones } from './types/company';
+import { terminosDe } from './utils/busqueda';
+import { buscarEnIndice, indiceDe } from './utils/busquedaGlobal';
 import { calcularCortes } from './utils/choroplethScale';
-import { contar, cumplenPorRegion, UMBRAL_INICIAL, type Conteo } from './utils/dataGrouping';
+import {
+  contar,
+  cumplenPorRegion,
+  FLOTA_INICIAL,
+  UMBRAL_INICIAL,
+  type Conteo,
+  type FiltroFlota,
+} from './utils/dataGrouping';
 
 const REGIONES = regiones as Regiones;
 const NOMBRE_CCAA = new Map(REGIONES.ccaa.map((c) => [c.cod, c.nombre]));
@@ -54,9 +70,19 @@ export default function App() {
     },
     [apagarPista, nav],
   );
+  /**
+   * Empresa elegida en la búsqueda global. El panel de su provincia la enseña
+   * fijada arriba, pase o no el filtro vigente: la mayoría de las activas no
+   * tiene dato de tamaño y aterrizaría en un listado que la esconde, negando
+   * al buscador que acababa de encontrarla. Navegar por el mapa o la lista la
+   * suelta: eso es empezar de cero.
+   */
+  const [elegida, setElegida] = useState<Empresa | null>(null);
+
   const alSeleccionarProvincia = useCallback(
     (cod: string) => {
       apagarPista();
+      setElegida(null);
       nav.irAProvincia(cod);
     },
     [apagarPista, nav],
@@ -70,9 +96,13 @@ export default function App() {
   // y el mapa llega un fotograma después, que es justo lo que se quiere.
   const umbralAplicado = useDeferredValue(umbral);
 
+  /** Fuente del dato de tamaño: mismo trato diferido que el umbral. */
+  const [fuenteFlota, setFuenteFlota] = useState<FiltroFlota>(FLOTA_INICIAL);
+  const fuenteAplicada = useDeferredValue(fuenteFlota);
+
   const recuentos = useMemo(
-    () => (dataset ? contar(dataset, REGIONES, umbralAplicado) : null),
-    [dataset, umbralAplicado],
+    () => (dataset ? contar(dataset, REGIONES, umbralAplicado, fuenteAplicada) : null),
+    [dataset, umbralAplicado, fuenteAplicada],
   );
 
   const cumplenCCAA = useMemo(() => recuentos && cumplenPorRegion(recuentos.ccaa), [recuentos]);
@@ -103,6 +133,42 @@ export default function App() {
     vista.nivel === 'provincia' ? vista.provincia : null,
     umbralAplicado,
     orden,
+    fuenteAplicada,
+  );
+
+  // ── Búsqueda global (toda España) ─────────────────────────────────────────
+  // La consulta vive aquí y no en el panel: sobrevive a la navegación entre
+  // niveles, igual que el orden. El texto va diferido como el umbral.
+  const [consultaGlobal, setConsultaGlobal] = useState('');
+  const consultaGlobalAplicada = useDeferredValue(consultaGlobal);
+  const buscandoGlobal = terminosDe(consultaGlobalAplicada).length > 0;
+
+  // El índice se precalienta en un rato ocioso tras llegar el dataset: así el
+  // primer tecleo no paga los cientos de milisegundos de construirlo. Si el
+  // usuario teclea antes del rato ocioso, `indiceDe` lo construye ahí mismo.
+  useEffect(() => {
+    if (!dataset) return;
+    const idle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 300));
+    const cancelar = window.cancelIdleCallback ?? window.clearTimeout;
+    const id = idle(() => indiceDe(dataset, NOMBRE_PROVINCIA));
+    return () => cancelar(id);
+  }, [dataset]);
+
+  const resultadosGlobales = useMemo(
+    () =>
+      dataset && buscandoGlobal
+        ? buscarEnIndice(indiceDe(dataset, NOMBRE_PROVINCIA), consultaGlobalAplicada)
+        : [],
+    [dataset, buscandoGlobal, consultaGlobalAplicada],
+  );
+
+  const alElegirResultado = useCallback(
+    (empresa: Empresa) => {
+      setElegida(empresa);
+      apagarPista();
+      nav.irAProvincia(empresa.provincia);
+    },
+    [apagarPista, nav],
   );
 
   const ambito: Conteo | null = useMemo(() => {
@@ -169,7 +235,10 @@ export default function App() {
       <Header
         total={recuentos?.nacional.cumplen ?? null}
         umbral={umbral}
+        fuente={fuenteFlota}
+        hayVerificadas={(dataset?.meta.resumen.verificada ?? 0) > 0}
         onCambiarUmbral={setUmbral}
+        onCambiarFuente={setFuenteFlota}
       />
 
       <main className="flex min-h-0 flex-1 flex-col lg:flex-row">
@@ -226,6 +295,17 @@ export default function App() {
           ambitoCoropleta={ambitoCoropleta}
           datosListos={recuentos !== null}
           hoja={hoja}
+          consultaGlobal={consultaGlobal}
+          resultadosGlobales={resultadosGlobales}
+          buscandoGlobal={buscandoGlobal}
+          nombresProvincia={NOMBRE_PROVINCIA}
+          empresaElegida={
+            elegida && vista.nivel === 'provincia' && elegida.provincia === vista.provincia
+              ? elegida
+              : null
+          }
+          onCambiarConsultaGlobal={setConsultaGlobal}
+          onElegirResultado={alElegirResultado}
           onCambiarOrden={setOrden}
           onSeleccionarRegion={vista.nivel === 'nacional' ? alSeleccionarCCAA : alSeleccionarProvincia}
         />

@@ -107,6 +107,13 @@ interface Props {
   onSeleccionarProvincia: (cod: string) => void;
   /** El zoom se sale del encuadre del nivel actual hacia fuera: retrocede uno. */
   onAlejarNivel: () => void;
+  /**
+   * Preview de la landing: sin controles, sin navegación por zoom, sin capas
+   * interactivas y sin las animaciones de primera visita (silueta y pista),
+   * que consumen su marca de `sessionStorage` y ya no saldrían en la
+   * herramienta de verdad.
+   */
+  decorativo?: boolean;
 }
 
 /**
@@ -128,6 +135,7 @@ export function SpainMap({
   onSeleccionarCCAA,
   onSeleccionarProvincia,
   onAlejarNivel,
+  decorativo = false,
 }: Props) {
   const nacional = vista.nivel === 'nacional';
   /** El azul de mar del tema, para tapar el relieve bajo la cartela canaria. */
@@ -173,18 +181,26 @@ export function SpainMap({
       maxZoom={11}
       zoomControl={false}
       attributionControl={false}
+      dragging={!decorativo}
+      scrollWheelZoom={!decorativo}
+      doubleClickZoom={!decorativo}
+      touchZoom={!decorativo}
+      boxZoom={!decorativo}
+      keyboard={!decorativo}
       className="h-full w-full"
     >
       <Encuadre clave={clave} limites={objetivo} onFin={alEncuadrar} />
 
-      <NavegacionPorZoom
-        vista={vista}
-        objetivo={objetivo}
-        provinciasGeo={provinciasGeo}
-        onSeleccionarCCAA={onSeleccionarCCAA}
-        onSeleccionarProvincia={onSeleccionarProvincia}
-        onAlejarNivel={onAlejarNivel}
-      />
+      {!decorativo && (
+        <NavegacionPorZoom
+          vista={vista}
+          objetivo={objetivo}
+          provinciasGeo={provinciasGeo}
+          onSeleccionarCCAA={onSeleccionarCCAA}
+          onSeleccionarProvincia={onSeleccionarProvincia}
+          onAlejarNivel={onAlejarNivel}
+        />
+      )}
 
       <TileLayer
         url={TESELAS.fisico.url}
@@ -228,7 +244,7 @@ export function SpainMap({
         recuentos={recuentosCCAA}
         cortes={cortesCCAA}
         modo={nacional ? 'coropleta' : 'contexto'}
-        {...(nacional ? { onSeleccionar: onSeleccionarCCAA } : {})}
+        {...(nacional && !decorativo ? { onSeleccionar: onSeleccionarCCAA } : {})}
       />
 
       {provinciasVisibles && (
@@ -246,10 +262,10 @@ export function SpainMap({
         <RouteTraceOverlay key={clave} feature={provinciaActiva} />
       )}
 
-      <LoadingSilhouette cargando={cargando} />
+      {!decorativo && <LoadingSilhouette cargando={cargando} />}
 
       {/* Solo a nivel nacional: es donde está el primer click posible. */}
-      {nacional && <PistaInicial activo={pistaActiva} />}
+      {nacional && !decorativo && <PistaInicial activo={pistaActiva} />}
 
       {/* Canarias está trasladada al Atlántico: la cartela deja claro que ese
           recuadro es un inset cartográfico y no su posición real. */}
@@ -272,7 +288,9 @@ export function SpainMap({
         </>
       )}
 
-      <ZoomControl position="bottomright" zoomInTitle="Acercar" zoomOutTitle="Alejar" />
+      {!decorativo && (
+        <ZoomControl position="bottomright" zoomInTitle="Acercar" zoomOutTitle="Alejar" />
+      )}
     </MapContainer>
   );
 }

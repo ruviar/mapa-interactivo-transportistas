@@ -13,7 +13,9 @@ import type { CortesCoropleta } from '../../utils/choroplethScale';
 import type { Conteo } from '../../utils/dataGrouping';
 import { Breadcrumb, type Segmento } from './Breadcrumb';
 import { CompanyPanel } from './CompanyPanel';
+import { GlobalSearchResults } from './GlobalSearchResults';
 import { RegionList, type FilaRegion } from './RegionList';
+import { SearchBox } from './SearchBox';
 import { SheetHandle } from './SheetHandle';
 
 /** El asa lo referencia con `aria-controls`. */
@@ -36,6 +38,15 @@ interface Props {
   ambitoCoropleta: string;
   datosListos: boolean;
   hoja: Hoja;
+  /** Búsqueda global (toda España): visible en los niveles nacional y comunidad. */
+  consultaGlobal: string;
+  resultadosGlobales: Empresa[];
+  buscandoGlobal: boolean;
+  nombresProvincia: ReadonlyMap<string, string>;
+  /** Empresa elegida en la búsqueda global, si es de la provincia abierta: va fijada arriba. */
+  empresaElegida: Empresa | null;
+  onCambiarConsultaGlobal: (consulta: string) => void;
+  onElegirResultado: (empresa: Empresa) => void;
   onCambiarOrden: (orden: Orden) => void;
   onSeleccionarRegion: (cod: string) => void;
 }
@@ -66,6 +77,13 @@ export function Sidebar({
   ambitoCoropleta,
   datosListos,
   hoja,
+  consultaGlobal,
+  resultadosGlobales,
+  buscandoGlobal,
+  nombresProvincia,
+  empresaElegida,
+  onCambiarConsultaGlobal,
+  onElegirResultado,
   onCambiarOrden,
   onSeleccionarRegion,
 }: Props) {
@@ -141,15 +159,34 @@ export function Sidebar({
               umbral={umbral}
               orden={orden}
               onCambiarOrden={onCambiarOrden}
+              empresaElegida={empresaElegida}
             />
           ) : (
             <>
-              <p className="px-4 py-2.5 text-caption text-asfalto">
-                {vista.nivel === 'nacional'
-                  ? 'Elige una comunidad en el mapa o en la lista.'
-                  : 'Elige una provincia para ver sus empresas.'}
-              </p>
-              <RegionList regiones={regiones} onSeleccionar={onSeleccionarRegion} />
+              <SearchBox
+                consulta={consultaGlobal}
+                onCambiar={onCambiarConsultaGlobal}
+                placeholder="Buscar empresa en toda España…"
+                etiqueta="Buscar empresa en toda España por nombre, NIF, localidad o provincia"
+              />
+
+              {buscandoGlobal ? (
+                <GlobalSearchResults
+                  resultados={resultadosGlobales}
+                  nombresProvincia={nombresProvincia}
+                  consulta={consultaGlobal}
+                  onElegir={onElegirResultado}
+                />
+              ) : (
+                <>
+                  <p className="px-4 py-2.5 text-caption text-asfalto">
+                    {vista.nivel === 'nacional'
+                      ? 'Elige una comunidad en el mapa o en la lista.'
+                      : 'Elige una provincia para ver sus empresas.'}
+                  </p>
+                  <RegionList regiones={regiones} onSeleccionar={onSeleccionarRegion} />
+                </>
+              )}
             </>
           )}
         </div>

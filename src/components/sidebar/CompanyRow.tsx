@@ -39,15 +39,25 @@ export function CompanyRow({ empresa, style }: { empresa: Empresa; style: CSSPro
       <p
         className="shrink-0 text-right font-mono text-caption tabular-nums text-asfalto"
         // Un dato del REAT y una estimación por plantilla no son lo mismo y
-        // la interfaz no puede presentarlos como si lo fueran.
+        // la interfaz no puede presentarlos como si lo fueran. Y un hueco no
+        // es un cero: en el listado filtrado nunca llega un valor nulo, pero
+        // la ficha fijada de la búsqueda global sí puede traerlo.
         title={
-          verificada
-            ? 'Vehículos autorizados según el REAT'
-            : 'Empleados en SABI: aproximación al tamaño de flota'
+          flota.valor === null
+            ? 'Sin dato de tamaño'
+            : verificada
+              ? 'Vehículos autorizados según el REAT'
+              : 'Empleados en SABI: aproximación al tamaño de flota'
         }
       >
-        {nf.format(flota.valor ?? 0)} {verificada ? 'veh.' : 'empl.'}
-        {verificada && <span className="ml-1 text-navy-800">✓</span>}
+        {flota.valor === null ? (
+          's. d.'
+        ) : (
+          <>
+            {nf.format(flota.valor)} {verificada ? 'veh.' : 'empl.'}
+            {verificada && <span className="ml-1 text-navy-800">✓</span>}
+          </>
+        )}
       </p>
     </div>
   );

@@ -25,6 +25,20 @@ export function cumpleUmbral(empresa: Empresa, umbral: number): boolean {
   return estado === 'activa' && flota.vigente && flota.valor !== null && flota.valor >= umbral;
 }
 
+/**
+ * Filtro por la fuente del dato de tamaño: todo, solo lo verificado en el REAT
+ * (vehículos de verdad) o solo lo estimado por plantilla de SABI. Existe porque
+ * `flota.valor` mezcla unidades —vehículos y empleados— y quien necesita
+ * comparar flotas reales tiene que poder quedarse solo con el REAT.
+ */
+export type FiltroFlota = 'todas' | 'verificada' | 'estimada';
+
+export const FLOTA_INICIAL: FiltroFlota = 'todas';
+
+export function cumpleFlota(empresa: Empresa, filtro: FiltroFlota): boolean {
+  return filtro === 'todas' || empresa.flota.tipo === filtro;
+}
+
 export interface Conteo {
   /** Empresas que cumplen el umbral. Es lo que colorea la coropleta. */
   cumplen: number;
@@ -57,8 +71,17 @@ const vacio = (): Conteo => ({ cumplen: 0, conDato: 0, activas: 0, total: 0 });
  * Un solo recorrido sobre las ~45.000 empresas. Las regiones sin ninguna
  * empresa arrancan en 0 y no en `undefined`: la coropleta necesita distinguir
  * "cero" de "sin dato" y son estados distintos en la leyenda.
+ *
+ * El filtro de fuente solo toca `cumplen` (lo que colorea la coropleta y llena
+ * el listado). `conDato` y `activas` se quedan como están: la cobertura mide
+ * cuánto dato hay, no cuánto pasa el filtro, y no debe moverse con él.
  */
-export function contar(dataset: Dataset, regiones: Regiones, umbral: number): Recuentos {
+export function contar(
+  dataset: Dataset,
+  regiones: Regiones,
+  umbral: number,
+  filtroFlota: FiltroFlota = 'todas',
+): Recuentos {
   const provincias: Record<CodProvincia, Conteo> = {};
   const ccaa: Record<CodCCAA, Conteo> = {};
   const nacional = vacio();
@@ -71,7 +94,7 @@ export function contar(dataset: Dataset, regiones: Regiones, umbral: number): Re
 
       const activa = empresa.estado === 'activa';
       const conDato = activa && empresa.flota.vigente && empresa.flota.valor !== null;
-      const cumple = conDato && cumpleUmbral(empresa, umbral);
+      const cumple = conDato && cumpleUmbral(empresa, umbral) && cumpleFlota(empresa, filtroFlota);
 
       for (const destino of destinos) {
         if (!destino) continue;

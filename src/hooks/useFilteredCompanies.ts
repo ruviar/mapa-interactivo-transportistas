@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
 
 import type { CodProvincia, Dataset, Empresa } from '../types/company';
-import { cumpleUmbral } from '../utils/dataGrouping';
+import { cumpleFlota, cumpleUmbral, type FiltroFlota } from '../utils/dataGrouping';
+import { comparadorDe, type Orden } from '../utils/ordenacion';
 
-/** Criterio de ordenación del listado. Ver `ORDEN_INICIAL`. */
-export type Orden = 'nombre' | 'tamano';
+/** Reexportado: los comparadores viven en `utils/ordenacion` para poder probarse sin React. */
+export type { Orden };
 
 /**
  * Alfabético por defecto, y no por tamaño.
@@ -17,29 +18,25 @@ export type Orden = 'nombre' | 'tamano';
  */
 export const ORDEN_INICIAL: Orden = 'nombre';
 
-const porNombre = (a: Empresa, b: Empresa) => a.nombre.localeCompare(b.nombre, 'es');
-
-/** A igual tamaño, alfabético: el listado no debe bailar entre repintados. */
-const porTamano = (a: Empresa, b: Empresa) =>
-  (b.flota.valor ?? 0) - (a.flota.valor ?? 0) || porNombre(a, b);
-
 /**
- * Empresas de una provincia que cumplen el filtro, en el orden pedido.
+ * Empresas de una provincia que cumplen los filtros, en el orden pedido.
  *
  * La búsqueda por texto no entra aquí: se aplica después, sobre esta lista, en
- * `CompanyPanel` — el umbral afecta al mapa entero y el texto solo al listado.
+ * `CompanyPanel` — el umbral y la fuente afectan al mapa entero y el texto
+ * solo al listado.
  */
 export function useFilteredCompanies(
   dataset: Dataset | null,
   provincia: CodProvincia | null,
   umbral: number,
   orden: Orden,
+  filtroFlota: FiltroFlota = 'todas',
 ): Empresa[] {
   return useMemo(() => {
     if (!dataset || !provincia) return [];
 
     return (dataset.empresas[provincia] ?? [])
-      .filter((e) => cumpleUmbral(e, umbral))
-      .sort(orden === 'tamano' ? porTamano : porNombre);
-  }, [dataset, provincia, umbral, orden]);
+      .filter((e) => cumpleUmbral(e, umbral) && cumpleFlota(e, filtroFlota))
+      .sort(comparadorDe(orden));
+  }, [dataset, provincia, umbral, orden, filtroFlota]);
 }

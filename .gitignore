@@ -9,3 +9,4 @@ dist/
 # (public/data/companies.json), porque el build de Vercel no ejecuta el script.
 data-source/*.xls
 data-source/*.xlsx
+.vercel
