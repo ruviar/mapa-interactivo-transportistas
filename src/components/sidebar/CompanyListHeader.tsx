@@ -1,3 +1,5 @@
+import { useId } from 'react';
+
 import type { Orden } from '../../hooks/useFilteredCompanies';
 
 interface Props {
@@ -5,106 +7,43 @@ interface Props {
   onCambiarOrden: (orden: Orden) => void;
 }
 
+/** Etiqueta en lenguaje llano: dice el criterio Y el sentido, nunca solo una flecha. */
+const OPCIONES: { valor: Orden; etiqueta: string }[] = [
+  { valor: 'nombre', etiqueta: 'Empresa (A → Z)' },
+  { valor: 'nombre-desc', etiqueta: 'Empresa (Z → A)' },
+  { valor: 'localidad', etiqueta: 'Localidad (A → Z)' },
+  { valor: 'localidad-desc', etiqueta: 'Localidad (Z → A)' },
+  { valor: 'tamano', etiqueta: 'Tamaño (mayor → menor)' },
+  { valor: 'tamano-asc', etiqueta: 'Tamaño (menor → mayor)' },
+];
+
 /**
- * Cabecera del listado: nombra las columnas y sirve para ordenar por ellas.
- *
- * Son botones con `aria-pressed` y no cabeceras de tabla: el listado es una
- * lista virtualizada, no un `<table>`, y fingir semántica de tabla para tres
- * columnas confundiría a un lector de pantalla más de lo que ayuda.
- *
- * Cada columna arranca en su sentido natural —alfabético ascendente, tamaño
- * descendente— y volver a pulsar la activa lo invierte. La flecha dice el
- * sentido vigente y reserva sitio también inactiva para que la etiqueta no
- * baile al activarse.
+ * Selector de orden. Antes eran dos botones con una flecha de significado
+ * implícito (¿↑ es A-Z o Z-A? ¿Qué hace ↓ en Localidad?) — un desplegable con
+ * el criterio y el sentido escritos en la propia opción no deja nada que
+ * adivinar, y admite los tres campos ordenables sin inventar más iconografía.
  */
 export function CompanyListHeader({ orden, onCambiarOrden }: Props) {
+  const id = useId();
+
   return (
-    <div
-      role="group"
-      aria-label="Ordenar el listado"
-      className="flex shrink-0 items-center justify-between gap-3 border-b border-asfalto/40 px-4 py-1.5"
-    >
-      <div className="flex items-center gap-4">
-        <Columna
-          orden={orden}
-          ascendente="nombre"
-          descendente="nombre-desc"
-          defecto="nombre"
-          onCambiarOrden={onCambiarOrden}
-          titulo="Ordenar por nombre de empresa; pulsar de nuevo invierte el sentido"
-        >
-          Empresa
-        </Columna>
+    <div className="flex shrink-0 items-center justify-between gap-3 border-b border-asfalto/40 px-4 py-1.5">
+      <label htmlFor={id} className="text-caption uppercase tracking-[0.08em] text-asfalto">
+        Ordenar
+      </label>
 
-        <Columna
-          orden={orden}
-          ascendente="localidad"
-          descendente="localidad-desc"
-          defecto="localidad"
-          onCambiarOrden={onCambiarOrden}
-          titulo="Ordenar por localidad; pulsar de nuevo invierte el sentido"
-        >
-          Localidad
-        </Columna>
-      </div>
-
-      <Columna
-        orden={orden}
-        ascendente="tamano-asc"
-        descendente="tamano"
-        defecto="tamano"
-        onCambiarOrden={onCambiarOrden}
-        titulo="Ordenar por tamaño: empleados en SABI, o vehículos si la flota está verificada en el REAT. Pulsar de nuevo invierte el sentido."
+      <select
+        id={id}
+        value={orden}
+        onChange={(e) => onCambiarOrden(e.target.value as Orden)}
+        className="bg-transparent text-caption font-medium text-ink focus-visible:outline-offset-2"
       >
-        Tamaño
-      </Columna>
+        {OPCIONES.map((o) => (
+          <option key={o.valor} value={o.valor}>
+            {o.etiqueta}
+          </option>
+        ))}
+      </select>
     </div>
-  );
-}
-
-function Columna({
-  orden,
-  ascendente,
-  descendente,
-  defecto,
-  onCambiarOrden,
-  titulo,
-  children,
-}: {
-  orden: Orden;
-  ascendente: Orden;
-  descendente: Orden;
-  /** Sentido con el que arranca la columna al activarse: el que responde a la pregunta habitual. */
-  defecto: Orden;
-  onCambiarOrden: (orden: Orden) => void;
-  titulo: string;
-  children: string;
-}) {
-  const activa = orden === ascendente || orden === descendente;
-  const siguiente = activa ? (orden === ascendente ? descendente : ascendente) : defecto;
-
-  return (
-    <button
-      type="button"
-      onClick={() => onCambiarOrden(siguiente)}
-      aria-pressed={activa}
-      title={titulo}
-      className={`flex items-center gap-1 text-caption transition-colors duration-150 ${
-        activa ? 'font-medium text-ink' : 'text-asfalto hover:text-ink'
-      }`}
-    >
-      {children}
-      {/* El sentido, audible: la flecha va `aria-hidden` y `aria-pressed` solo
-          dice que la columna está activa, no hacia dónde ordena. */}
-      {activa && (
-        <span className="sr-only">
-          {orden === ascendente ? ', orden ascendente' : ', orden descendente'}
-        </span>
-      )}
-      {/* Reservada siempre: si apareciera al activarse, movería la etiqueta. */}
-      <span aria-hidden="true" className={activa ? 'text-atencion' : 'invisible'}>
-        {activa && orden === ascendente ? '↑' : '↓'}
-      </span>
-    </button>
   );
 }

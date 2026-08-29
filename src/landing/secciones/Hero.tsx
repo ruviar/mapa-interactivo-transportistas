@@ -228,11 +228,10 @@ export function Hero() {
                   e.preventDefault();
                   irAVista('app');
                 }}
-                magnetico
               >
                 Ir al mapa
               </Accion>
-              <Accion href="#contacto" tono="contorno" magnetico>
+              <Accion href="#contacto" tono="contorno">
                 Hablar con nosotros
               </Accion>
             </div>

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
 import type { CodProvincia, Dataset, Empresa } from '../types/company';
-import { cumpleFlota, cumpleUmbral, type FiltroFlota } from '../utils/dataGrouping';
+import { cumpleFiltrosListado, type FiltrosListado } from '../utils/dataGrouping';
 import { comparadorDe, type Orden } from '../utils/ordenacion';
 
 /** Reexportado: los comparadores viven en `utils/ordenacion` para poder probarse sin React. */
@@ -19,24 +19,34 @@ export type { Orden };
 export const ORDEN_INICIAL: Orden = 'nombre';
 
 /**
- * Empresas de una provincia que cumplen los filtros, en el orden pedido.
+ * Qué provincias entran en el listado: una sola (vista de provincia) o todas
+ * las de una comunidad a la vez (vista de comunidad, sin exigir bajar a una
+ * provincia concreta).
+ */
+export type AmbitoListado =
+  | { tipo: 'provincia'; provincia: CodProvincia }
+  | { tipo: 'ccaa'; provincias: CodProvincia[] };
+
+/**
+ * Empresas del ámbito (una provincia o una comunidad entera) que cumplen los
+ * filtros, en el orden pedido.
  *
  * La búsqueda por texto no entra aquí: se aplica después, sobre esta lista, en
- * `CompanyPanel` — el umbral y la fuente afectan al mapa entero y el texto
- * solo al listado.
+ * `CompanyPanel` — los filtros afectan al mapa entero (los que también lo
+ * hacen) y el texto solo al listado.
  */
 export function useFilteredCompanies(
   dataset: Dataset | null,
-  provincia: CodProvincia | null,
-  umbral: number,
+  ambito: AmbitoListado | null,
+  filtros: FiltrosListado,
   orden: Orden,
-  filtroFlota: FiltroFlota = 'todas',
 ): Empresa[] {
   return useMemo(() => {
-    if (!dataset || !provincia) return [];
+    if (!dataset || !ambito) return [];
 
-    return (dataset.empresas[provincia] ?? [])
-      .filter((e) => cumpleUmbral(e, umbral) && cumpleFlota(e, filtroFlota))
-      .sort(comparadorDe(orden));
-  }, [dataset, provincia, umbral, orden, filtroFlota]);
+    const provincias = ambito.tipo === 'provincia' ? [ambito.provincia] : ambito.provincias;
+    const empresas = provincias.flatMap((cod) => dataset.empresas[cod] ?? []);
+
+    return empresas.filter((e) => cumpleFiltrosListado(e, filtros)).sort(comparadorDe(orden));
+  }, [dataset, ambito, filtros, orden]);
 }

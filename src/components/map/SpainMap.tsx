@@ -343,7 +343,24 @@ function Encuadre({
       return;
     }
 
-    map.flyToBounds(limites, { padding: MARGEN, duration: 0.42 });
+    /**
+     * `flyToBounds` traza una curva (Van Wijk) entre el zoom de salida y el de
+     * llegada; su fórmula divide entre ese delta. Con `maxZoom={11}` puesto,
+     * dos encuadres bien distintos (España entera y una comunidad pequeña)
+     * pueden topar los dos en el mismo techo y llegar con el MISMO zoom —
+     * delta cero, división por (casi) cero, y Leaflet revienta el mapa entero
+     * con «Invalid LatLng (NaN, NaN)» sin que haya red de seguridad alrededor.
+     * Sin cambio de escala no hay curva que volar: un `fitBounds` animado
+     * (pan + zoom lineales, sin la fórmula de Van Wijk) hace el mismo salto.
+     */
+    const zoomActual = map.getZoom();
+    const zoomObjetivo = map.getBoundsZoom(limites, false, point(MARGEN));
+
+    if (Math.abs(zoomObjetivo - zoomActual) < 0.01) {
+      map.fitBounds(limites, { padding: MARGEN, animate: true, duration: 0.42 });
+    } else {
+      map.flyToBounds(limites, { padding: MARGEN, duration: 0.42 });
+    }
     map.once('moveend', onFin);
     return () => {
       map.off('moveend', onFin);

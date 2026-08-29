@@ -9,27 +9,35 @@ import {
 
 import { Footer } from './components/layout/Footer';
 import { Header } from './components/layout/Header';
+import { MapErrorBoundary } from './components/map/MapErrorBoundary';
 import { SpainMap } from './components/map/SpainMap';
 import type { Segmento } from './components/sidebar/Breadcrumb';
 import type { FilaRegion } from './components/sidebar/RegionList';
 import { Sidebar } from './components/sidebar/Sidebar';
 import { useBottomSheet } from './hooks/useBottomSheet';
 import { useDataset } from './hooks/useDataset';
-import { ORDEN_INICIAL, useFilteredCompanies, type Orden } from './hooks/useFilteredCompanies';
+import {
+  ORDEN_INICIAL,
+  useFilteredCompanies,
+  type AmbitoListado,
+  type Orden,
+} from './hooks/useFilteredCompanies';
 import { useMapNavigation } from './hooks/useMapNavigation';
 import { useProvincias } from './hooks/useProvincias';
 import regiones from './data/regiones.json';
-import type { Empresa, Regiones } from './types/company';
+import type { CodProvincia, Empresa, Regiones } from './types/company';
 import { terminosDe } from './utils/busqueda';
 import { buscarEnIndice, indiceDe } from './utils/busquedaGlobal';
 import { calcularCortes } from './utils/choroplethScale';
 import {
   contar,
   cumplenPorRegion,
+  FILTROS_LISTADO_INICIALES,
   FLOTA_INICIAL,
   UMBRAL_INICIAL,
   type Conteo,
   type FiltroFlota,
+  type FiltrosListado,
 } from './utils/dataGrouping';
 
 const REGIONES = regiones as Regiones;
@@ -128,13 +136,72 @@ export default function App() {
   // a quien acaba de pedir explícitamente el orden por tamaño.
   const [orden, setOrden] = useState<Orden>(ORDEN_INICIAL);
 
-  const empresas = useFilteredCompanies(
-    dataset,
-    vista.nivel === 'provincia' ? vista.provincia : null,
-    umbralAplicado,
-    orden,
-    fuenteAplicada,
+  // ── Filtros avanzados del listado (no tocan la coropleta) ──────────────────
+  // Máximo de tamaño e "incluir sin dato" son exclusivos del listado: amplían
+  // o acotan lo que se ve en una lista sin resignificar de qué habla el mapa.
+  const [umbralMax, setUmbralMax] = useState<number | null>(FILTROS_LISTADO_INICIALES.umbralMax);
+  const umbralMaxAplicado = useDeferredValue(umbralMax);
+  const [incluirSinDato, setIncluirSinDato] = useState(FILTROS_LISTADO_INICIALES.incluirSinDato);
+  const incluirSinDatoAplicado = useDeferredValue(incluirSinDato);
+
+  const filtrosListado: FiltrosListado = useMemo(
+    () => ({
+      umbralMin: umbralAplicado,
+      umbralMax: umbralMaxAplicado,
+      filtroFlota: fuenteAplicada,
+      incluirSinDato: incluirSinDatoAplicado,
+    }),
+    [umbralAplicado, umbralMaxAplicado, fuenteAplicada, incluirSinDatoAplicado],
   );
+
+  // ── Ámbito del listado: una provincia, o una comunidad entera ──────────────
+  // Ver una comunidad no exige bajar a una provincia: se listan sus empresas
+  // desde el primer clic, y el desglose por provincia (`facetsProvincia`, más
+  // abajo) acota sin tocar el zoom del mapa.
+  const ambitoProvincia: AmbitoListado | null = useMemo(
+    () => (vista.nivel === 'provincia' ? { tipo: 'provincia', provincia: vista.provincia } : null),
+    [vista],
+  );
+  const provinciasDeCcaaActual: CodProvincia[] = useMemo(() => {
+    if (vista.nivel !== 'ccaa') return [];
+    return REGIONES.ccaa.find((c) => c.cod === vista.ccaa)?.provincias ?? [];
+  }, [vista]);
+  const ambitoCCAA: AmbitoListado | null = useMemo(
+    () => (vista.nivel === 'ccaa' ? { tipo: 'ccaa', provincias: provinciasDeCcaaActual } : null),
+    [vista, provinciasDeCcaaActual],
+  );
+
+  const empresasProvincia = useFilteredCompanies(dataset, ambitoProvincia, filtrosListado, orden);
+  // Sin acotar por provincia: es la base de los chips de desglose (sus
+  // recuentos no deben moverse porque el usuario haya elegido un chip) y,
+  // cuando no hay ninguno elegido, es directamente lo que se enseña.
+  const empresasCCAA = useFilteredCompanies(dataset, ambitoCCAA, filtrosListado, orden);
+
+  /** Provincia elegida en los chips de desglose de una comunidad. `null` = todas. */
+  const [provinciaFacet, setProvinciaFacet] = useState<CodProvincia | null>(null);
+  useEffect(() => {
+    setProvinciaFacet(null);
+  }, [vista.nivel === 'ccaa' ? vista.ccaa : null]);
+
+  const facetsProvincia: FilaRegion[] = useMemo(() => {
+    if (vista.nivel !== 'ccaa') return [];
+    const cuentas = new Map<CodProvincia, number>();
+    for (const e of empresasCCAA) cuentas.set(e.provincia, (cuentas.get(e.provincia) ?? 0) + 1);
+    return provinciasDeCcaaActual
+      .map((cod) => ({
+        cod,
+        nombre: NOMBRE_PROVINCIA.get(cod) ?? cod,
+        cumplen: cuentas.get(cod) ?? 0,
+      }))
+      .sort(porTamano);
+  }, [vista, empresasCCAA, provinciasDeCcaaActual]);
+
+  const empresas = useMemo(() => {
+    if (vista.nivel === 'provincia') return empresasProvincia;
+    if (vista.nivel !== 'ccaa') return [];
+    if (!provinciaFacet) return empresasCCAA;
+    return empresasCCAA.filter((e) => e.provincia === provinciaFacet);
+  }, [vista, empresasProvincia, empresasCCAA, provinciaFacet]);
 
   // ── Búsqueda global (toda España) ─────────────────────────────────────────
   // La consulta vive aquí y no en el panel: sobrevive a la navegación entre
@@ -192,20 +259,14 @@ export default function App() {
     ];
   }, [vista, nav]);
 
+  /** Comunidades navegables a nivel nacional. El desglose por provincia dentro
+   *  de una comunidad lo da `facetsProvincia`, no esta lista. */
   const listaRegiones: FilaRegion[] = useMemo(() => {
-    if (vista.nivel === 'nacional') {
-      return REGIONES.ccaa
-        .map((c) => ({ cod: c.cod, nombre: c.nombre, cumplen: cumplenCCAA?.[c.cod] ?? 0 }))
-        .sort(porTamano);
-    }
-    if (vista.nivel === 'ccaa') {
-      return REGIONES.provincias
-        .filter((p) => p.ccaa === vista.ccaa)
-        .map((p) => ({ cod: p.cod, nombre: p.nombre, cumplen: cumplenProvincias?.[p.cod] ?? 0 }))
-        .sort(porTamano);
-    }
-    return [];
-  }, [vista, cumplenCCAA, cumplenProvincias]);
+    if (vista.nivel !== 'nacional') return [];
+    return REGIONES.ccaa
+      .map((c) => ({ cod: c.cod, nombre: c.nombre, cumplen: cumplenCCAA?.[c.cod] ?? 0 }))
+      .sort(porTamano);
+  }, [vista, cumplenCCAA]);
 
   const titulo =
     vista.nivel === 'nacional'
@@ -252,20 +313,22 @@ export default function App() {
               quedaba con un tercio de vacío arriba. En escritorio `--asomo` es
               0 y esto es un `inset-0` normal. */}
           <div className="absolute inset-x-0 top-0 bottom-[var(--asomo,0px)]">
-            <SpainMap
-              vista={vista}
-              clave={nav.clave}
-              provinciasGeo={provinciasGeo}
-              recuentosCCAA={cumplenCCAA}
-              recuentosProvincias={cumplenProvincias}
-              cortesCCAA={cortesCCAA}
-              cortesProvincias={cortesProvincias}
-              cargando={carga.estado === 'cargando'}
-              pistaActiva={pistaActiva}
-              onSeleccionarCCAA={alSeleccionarCCAA}
-              onSeleccionarProvincia={alSeleccionarProvincia}
-              onAlejarNivel={alAlejarNivel}
-            />
+            <MapErrorBoundary resetKey={nav.clave} onReintentar={nav.irANacional}>
+              <SpainMap
+                vista={vista}
+                clave={nav.clave}
+                provinciasGeo={provinciasGeo}
+                recuentosCCAA={cumplenCCAA}
+                recuentosProvincias={cumplenProvincias}
+                cortesCCAA={cortesCCAA}
+                cortesProvincias={cortesProvincias}
+                cargando={carga.estado === 'cargando'}
+                pistaActiva={pistaActiva}
+                onSeleccionarCCAA={alSeleccionarCCAA}
+                onSeleccionarProvincia={alSeleccionarProvincia}
+                onAlejarNivel={alAlejarNivel}
+              />
+            </MapErrorBoundary>
           </div>
 
           {carga.estado === 'cargando' && (
@@ -288,6 +351,8 @@ export default function App() {
           titulo={titulo}
           conteo={ambito}
           umbral={umbralAplicado}
+          umbralMax={umbralMaxAplicado}
+          incluirSinDato={incluirSinDatoAplicado}
           regiones={listaRegiones}
           empresas={empresas}
           orden={orden}
@@ -304,10 +369,15 @@ export default function App() {
               ? elegida
               : null
           }
+          facetsProvincia={facetsProvincia}
+          provinciaFacet={provinciaFacet}
           onCambiarConsultaGlobal={setConsultaGlobal}
           onElegirResultado={alElegirResultado}
           onCambiarOrden={setOrden}
-          onSeleccionarRegion={vista.nivel === 'nacional' ? alSeleccionarCCAA : alSeleccionarProvincia}
+          onCambiarUmbralMax={setUmbralMax}
+          onCambiarIncluirSinDato={setIncluirSinDato}
+          onCambiarFacet={setProvinciaFacet}
+          onSeleccionarRegion={alSeleccionarCCAA}
         />
       </main>
 

@@ -29,7 +29,9 @@ interface Props {
   /** Recuento de la región activa: cumplen el filtro, con dato, activas y total. */
   conteo: Conteo | null;
   umbral: number;
-  /** Regiones navegables del nivel actual (CCAA o provincias). */
+  umbralMax: number | null;
+  incluirSinDato: boolean;
+  /** Comunidades navegables a nivel nacional. */
   regiones: FilaRegion[];
   empresas: Empresa[];
   orden: Orden;
@@ -45,9 +47,16 @@ interface Props {
   nombresProvincia: ReadonlyMap<string, string>;
   /** Empresa elegida en la búsqueda global, si es de la provincia abierta: va fijada arriba. */
   empresaElegida: Empresa | null;
+  /** Solo en vista de comunidad: desglose por provincia para acotar sin navegar. */
+  facetsProvincia: FilaRegion[];
+  provinciaFacet: string | null;
   onCambiarConsultaGlobal: (consulta: string) => void;
   onElegirResultado: (empresa: Empresa) => void;
   onCambiarOrden: (orden: Orden) => void;
+  onCambiarUmbralMax: (umbralMax: number | null) => void;
+  onCambiarIncluirSinDato: (incluir: boolean) => void;
+  onCambiarFacet: (cod: string | null) => void;
+  /** Solo se usa a nivel nacional: elegir una comunidad de la lista. */
   onSeleccionarRegion: (cod: string) => void;
 }
 
@@ -70,6 +79,8 @@ export function Sidebar({
   titulo,
   conteo,
   umbral,
+  umbralMax,
+  incluirSinDato,
   regiones,
   empresas,
   orden,
@@ -82,9 +93,14 @@ export function Sidebar({
   buscandoGlobal,
   nombresProvincia,
   empresaElegida,
+  facetsProvincia,
+  provinciaFacet,
   onCambiarConsultaGlobal,
   onElegirResultado,
   onCambiarOrden,
+  onCambiarUmbralMax,
+  onCambiarIncluirSinDato,
+  onCambiarFacet,
   onSeleccionarRegion,
 }: Props) {
   const recogida = hoja.esHoja && !hoja.desplegada;
@@ -151,15 +167,24 @@ export function Sidebar({
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          {vista.nivel === 'provincia' ? (
-            // `key`: al cambiar de provincia se remonta y el buscador se vacía.
+          {vista.nivel === 'provincia' || vista.nivel === 'ccaa' ? (
+            // `key`: al cambiar de ámbito se remonta y el buscador/filtros se
+            // vacían. Al cambiar solo el facet de provincia dentro de la misma
+            // comunidad NO se remonta (misma key): así no se pierde lo tecleado.
             <CompanyPanel
-              key={vista.provincia}
+              key={vista.nivel === 'provincia' ? `p:${vista.provincia}` : `c:${vista.ccaa}`}
               empresas={empresas}
               umbral={umbral}
+              umbralMax={umbralMax}
+              incluirSinDato={incluirSinDato}
               orden={orden}
               onCambiarOrden={onCambiarOrden}
+              onCambiarUmbralMax={onCambiarUmbralMax}
+              onCambiarIncluirSinDato={onCambiarIncluirSinDato}
               empresaElegida={empresaElegida}
+              facetsProvincia={vista.nivel === 'ccaa' ? facetsProvincia : undefined}
+              provinciaFacet={vista.nivel === 'ccaa' ? provinciaFacet : undefined}
+              onCambiarFacet={vista.nivel === 'ccaa' ? onCambiarFacet : undefined}
             />
           ) : (
             <>
@@ -180,9 +205,7 @@ export function Sidebar({
               ) : (
                 <>
                   <p className="px-4 py-2.5 text-caption text-asfalto">
-                    {vista.nivel === 'nacional'
-                      ? 'Elige una comunidad en el mapa o en la lista.'
-                      : 'Elige una provincia para ver sus empresas.'}
+                    Elige una comunidad en el mapa o en la lista.
                   </p>
                   <RegionList regiones={regiones} onSeleccionar={onSeleccionarRegion} />
                 </>

@@ -113,3 +113,41 @@ export function contar(
 export function cumplenPorRegion(conteos: Record<string, Conteo>): Record<string, number> {
   return Object.fromEntries(Object.entries(conteos).map(([cod, c]) => [cod, c.cumplen]));
 }
+
+/**
+ * Filtros del LISTADO (provincia o comunidad), no del mapa. `umbralMin` y
+ * `filtroFlota` son los mismos que colorean la coropleta —se pasan tal cual,
+ * sin duplicar el control—; `umbralMax` e `incluirSinDato` son exclusivos del
+ * listado: ampliar lo que se ve en una lista no debería resignificar de qué
+ * habla la coropleta.
+ */
+export interface FiltrosListado {
+  umbralMin: number;
+  /** `null` = sin techo. */
+  umbralMax: number | null;
+  filtroFlota: FiltroFlota;
+  /**
+   * Empresas activas sin dato de tamaño vigente. Fuera de cualquier umbral —
+   * no hay valor con el que compararlas—: se incluyen entrando por esta
+   * puerta o no se incluyen en absoluto, nunca a medias.
+   */
+  incluirSinDato: boolean;
+}
+
+export const FILTROS_LISTADO_INICIALES: Pick<FiltrosListado, 'umbralMax' | 'incluirSinDato'> = {
+  umbralMax: null,
+  incluirSinDato: false,
+};
+
+export function cumpleFiltrosListado(empresa: Empresa, filtros: FiltrosListado): boolean {
+  if (empresa.estado !== 'activa') return false;
+
+  const sinDatoVigente = empresa.flota.valor === null || !empresa.flota.vigente;
+  if (sinDatoVigente) return filtros.incluirSinDato;
+
+  return (
+    cumpleUmbral(empresa, filtros.umbralMin) &&
+    (filtros.umbralMax === null || empresa.flota.valor! <= filtros.umbralMax) &&
+    cumpleFlota(empresa, filtros.filtroFlota)
+  );
+}
