@@ -90,11 +90,13 @@ function FilaOrden({
         {etiqueta}
       </label>
 
+      {/* Ancho fijo e igual en las dos filas: los `select` se dimensionan por
+          su contenido y las cajitas quedaban de tamaños distintos. */}
       <select
         id={id}
         value={valor}
         onChange={(e) => onCambiar(e.target.value)}
-        className="min-w-0 bg-transparent text-caption font-medium text-ink"
+        className="w-44 shrink-0 bg-transparent text-caption font-medium text-ink"
       >
         {opciones.map((o) => (
           <option key={o.valor} value={o.valor}>
