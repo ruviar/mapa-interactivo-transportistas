@@ -14,9 +14,9 @@ export type { Orden };
  * infla a los operadores logísticos grandes (GLS, DHL, XPO, CEVA): su plantilla
  * es sobre todo almacén y oficina, no conductores. Encabezar el listado con
  * ellos sugiere un ranking de flota que el dato no sostiene. Quien quiera ese
- * orden lo pide explícitamente en la cabecera de la columna.
+ * orden lo pide explícitamente en el selector de orden.
  */
-export const ORDEN_INICIAL: Orden = 'nombre';
+export const ORDEN_INICIAL: Orden = [{ criterio: 'nombre', sentido: 'asc' }];
 
 /**
  * Qué provincias entran en el listado: una sola (vista de provincia) o todas
