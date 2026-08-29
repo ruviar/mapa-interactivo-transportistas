@@ -22,12 +22,16 @@ const OPCIONES: { valor: Orden; etiqueta: string }[] = [
  * implícito (¿↑ es A-Z o Z-A? ¿Qué hace ↓ en Localidad?) — un desplegable con
  * el criterio y el sentido escritos en la propia opción no deja nada que
  * adivinar, y admite los tres campos ordenables sin inventar más iconografía.
+ *
+ * Sin padding ni borde propios: vive dentro del desplegable "Filtros y
+ * orden" de `CompanyPanel`, como una fila más entre las demás — es ese
+ * contenedor quien pone el espaciado.
  */
 export function CompanyListHeader({ orden, onCambiarOrden }: Props) {
   const id = useId();
 
   return (
-    <div className="flex shrink-0 items-center justify-between gap-3 border-b border-asfalto/40 px-4 py-1.5">
+    <div className="flex items-center justify-between gap-3 text-body-sm">
       <label htmlFor={id} className="text-caption uppercase tracking-[0.08em] text-asfalto">
         Ordenar
       </label>

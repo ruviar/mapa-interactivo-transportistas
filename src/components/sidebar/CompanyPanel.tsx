@@ -1,6 +1,7 @@
-import { SlidersHorizontal } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { useDeferredValue, useId, useMemo, useState } from 'react';
 
+import { PASOS_UMBRAL } from '../layout/EmployeeThresholdSlider';
 import type { Orden } from '../../hooks/useFilteredCompanies';
 import type { Empresa } from '../../types/company';
 import { filtrarPorTexto, terminosDe } from '../../utils/busqueda';
@@ -12,6 +13,24 @@ import type { FilaRegion } from './RegionList';
 import { SearchBox } from './SearchBox';
 
 const nf = new Intl.NumberFormat('es-ES');
+
+/**
+ * Mismas paradas no lineales que el umbral mínimo (`PASOS_UMBRAL`), más una
+ * parada extra al final: "sin máximo". Reutilizar la escala es lo que hace
+ * que el deslizable sirva de algo — el 94% de las empresas con dato tiene
+ * menos de 10 empleados, y un recorrido lineal 0-100000 dejaría todo el rango
+ * útil apretado en el primer milímetro de la pista.
+ */
+const INDICE_SIN_MAXIMO = PASOS_UMBRAL.length;
+
+function indiceDeMaximo(maximo: number | null): number {
+  if (maximo === null) return INDICE_SIN_MAXIMO;
+  let mejor = 0;
+  for (let i = 1; i < PASOS_UMBRAL.length; i++) {
+    if (Math.abs(PASOS_UMBRAL[i]! - maximo) < Math.abs(PASOS_UMBRAL[mejor]! - maximo)) mejor = i;
+  }
+  return mejor;
+}
 
 interface Props {
   /** Empresas del ámbito (provincia o comunidad) que ya cumplen los filtros, ya ordenadas. */
@@ -83,7 +102,14 @@ export function CompanyPanel({
           ? `No entra en el listado: por debajo del umbral (≥ ${umbral} empl.).`
           : 'No entra en el listado: fuera del filtro de fuente o del rango de tamaño.';
 
-  const [filtrosAbiertos, setFiltrosAbiertos] = useState(false);
+  // Cerrado por defecto: en la hoja móvil (82dvh) cada fila de cabecera
+  // fija le resta espacio real al listado — con el buscador, los chips, los
+  // filtros y el orden siempre abiertos a la vez, dos filas de empresas son
+  // literalmente todo lo que quedaba. Aquí solo el buscador y los chips (la
+  // vía para "ver por comunidad") se quedan siempre a la vista; el resto es
+  // un solo desplegable.
+  const [opcionesAbiertas, setOpcionesAbiertas] = useState(false);
+  const hayFiltroActivo = umbralMax !== null || incluirSinDato;
   const idMax = useId();
   const idSinDato = useId();
 
@@ -99,38 +125,76 @@ export function CompanyPanel({
         />
       )}
 
+      {empresaElegida && (
+        <div className="shrink-0 border-b border-atencion/50 bg-atencion/10">
+          <p className="px-4 pt-2 text-caption uppercase tracking-[0.08em] text-asfalto">
+            Resultado de la búsqueda en toda España
+          </p>
+          <CompanyRow empresa={empresaElegida} style={{ height: 56 }} />
+          {motivoFueraDelFiltro && (
+            <p className="px-4 pb-2 text-caption text-asfalto">{motivoFueraDelFiltro}</p>
+          )}
+        </div>
+      )}
+
       <div className="shrink-0 border-b border-asfalto/40">
         <button
           type="button"
-          onClick={() => setFiltrosAbiertos((v) => !v)}
-          aria-expanded={filtrosAbiertos}
-          className="flex w-full items-center gap-1.5 px-4 py-2 text-caption uppercase tracking-[0.08em] text-asfalto transition-colors duration-150 hover:text-ink"
+          onClick={() => setOpcionesAbiertas((v) => !v)}
+          aria-expanded={opcionesAbiertas}
+          className="flex w-full items-center justify-between gap-3 px-4 py-1.5 text-caption text-asfalto transition-colors duration-150 hover:text-ink"
         >
-          <SlidersHorizontal aria-hidden="true" className="size-3.5" strokeWidth={1.75} />
-          Filtros avanzados
-          {(umbralMax !== null || incluirSinDato) && (
-            <span className="size-1.5 rounded-full bg-atencion" aria-hidden="true" />
-          )}
+          <span>
+            <span className="font-mono tabular-nums">{nf.format(visibles.length)}</span>
+            {buscando && (
+              <>
+                {' '}
+                de <span className="font-mono tabular-nums">{nf.format(empresas.length)}</span>
+              </>
+            )}{' '}
+            {visibles.length === 1 ? 'empresa' : 'empresas'}
+          </span>
+
+          <span className="flex items-center gap-1 uppercase tracking-[0.08em]">
+            Filtros y orden
+            {hayFiltroActivo && <span className="size-1.5 rounded-full bg-atencion" aria-hidden="true" />}
+            <ChevronDown
+              aria-hidden="true"
+              className={`size-3.5 transition-transform duration-150 ${opcionesAbiertas ? 'rotate-180' : ''}`}
+              strokeWidth={1.75}
+            />
+          </span>
         </button>
 
-        {filtrosAbiertos && (
+        {opcionesAbiertas && (
           <div className="flex flex-col gap-2.5 px-4 pb-3">
-            <label htmlFor={idMax} className="flex items-center justify-between gap-3 text-body-sm">
-              <span>Máximo de tamaño</span>
+            {/* Sin filas no hay nada que ordenar. */}
+            {visibles.length > 0 && (
+              <CompanyListHeader orden={orden} onCambiarOrden={onCambiarOrden} />
+            )}
+
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between gap-3 text-body-sm">
+                <label htmlFor={idMax}>Máximo de tamaño</label>
+                <span className="font-mono tabular-nums text-asfalto">
+                  {umbralMax === null ? 'Sin máximo' : umbralMax}
+                </span>
+              </div>
               <input
                 id={idMax}
-                type="number"
+                type="range"
                 min={0}
-                inputMode="numeric"
-                placeholder="Sin máximo"
-                value={umbralMax ?? ''}
+                max={INDICE_SIN_MAXIMO}
+                step={1}
+                value={indiceDeMaximo(umbralMax)}
                 onChange={(e) => {
-                  const v = e.target.value;
-                  onCambiarUmbralMax(v === '' ? null : Math.max(0, Number(v)));
+                  const i = Number(e.target.value);
+                  onCambiarUmbralMax(i >= INDICE_SIN_MAXIMO ? null : PASOS_UMBRAL[i]!);
                 }}
-                className="w-28 border border-asfalto/50 bg-base px-2 py-1 text-right font-mono text-body-sm tabular-nums placeholder:font-sans placeholder:text-caption"
+                aria-valuetext={umbralMax === null ? 'sin máximo' : `${umbralMax} como máximo`}
+                className="w-full accent-atencion"
               />
-            </label>
+            </div>
 
             <label htmlFor={idSinDato} className="flex items-center gap-2 text-body-sm">
               <input
@@ -145,33 +209,6 @@ export function CompanyPanel({
           </div>
         )}
       </div>
-
-      {empresaElegida && (
-        <div className="shrink-0 border-b border-atencion/50 bg-atencion/10">
-          <p className="px-4 pt-2 text-caption uppercase tracking-[0.08em] text-asfalto">
-            Resultado de la búsqueda en toda España
-          </p>
-          <CompanyRow empresa={empresaElegida} style={{ height: 56 }} />
-          {motivoFueraDelFiltro && (
-            <p className="px-4 pb-2 text-caption text-asfalto">{motivoFueraDelFiltro}</p>
-          )}
-        </div>
-      )}
-
-      <p className="shrink-0 border-b border-asfalto/25 px-4 py-1.5 text-caption text-asfalto">
-        <span className="font-mono tabular-nums">{nf.format(visibles.length)}</span>
-        {buscando && (
-          <>
-            {' '}
-            de <span className="font-mono tabular-nums">{nf.format(empresas.length)}</span>
-          </>
-        )}{' '}
-        {visibles.length === 1 ? 'empresa' : 'empresas'}
-      </p>
-
-      {/* Sin filas no hay nada que ordenar: la cabecera sobre un mensaje de
-          «sin resultados» solo añade ruido. */}
-      {visibles.length > 0 && <CompanyListHeader orden={orden} onCambiarOrden={onCambiarOrden} />}
 
       <CompanyList
         empresas={visibles}
