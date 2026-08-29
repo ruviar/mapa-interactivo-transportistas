@@ -97,6 +97,14 @@ test('multiclave: localidad A→Z y, dentro de cada localidad, tamaño mayor→m
   );
 });
 
+test('sin claves: cae al alfabético por nombre (el orden inicial de la herramienta)', () => {
+  const lista = [zaragoza, almeria, sinLocalidad];
+  assert.deepEqual(
+    [...lista].sort(comparadorDe([])).map((e) => e.nombre),
+    ['ACARREOS ALFA SL', 'MUDANZAS MEDIA SL', 'TRANS ZETA SL'],
+  );
+});
+
 test('multiclave: a igualdad en todas las claves, desempate alfabético estable', () => {
   const b = empresa('BETA SL', 'Teruel', 5);
   const a = empresa('ALFA SL', 'Teruel', 5);

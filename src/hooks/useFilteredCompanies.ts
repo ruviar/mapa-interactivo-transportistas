@@ -16,7 +16,8 @@ export type { Orden };
  * ellos sugiere un ranking de flota que el dato no sostiene. Quien quiera ese
  * orden lo pide explícitamente en el selector de orden.
  */
-export const ORDEN_INICIAL: Orden = [{ criterio: 'nombre', sentido: 'asc' }];
+/** Sin claves: `comparadorDe` cae solo al alfabético por nombre, que es justo el arranque que se quiere. */
+export const ORDEN_INICIAL: Orden = [];
 
 /**
  * Qué provincias entran en el listado: una sola (vista de provincia) o todas
