@@ -1,3 +1,4 @@
+import { ChevronDown } from 'lucide-react';
 import { useId } from 'react';
 
 import type { Orden } from '../../hooks/useFilteredCompanies';
@@ -91,19 +92,28 @@ function FilaOrden({
       </label>
 
       {/* Ancho fijo e igual en las dos filas: los `select` se dimensionan por
-          su contenido y las cajitas quedaban de tamaños distintos. */}
-      <select
-        id={id}
-        value={valor}
-        onChange={(e) => onCambiar(e.target.value)}
-        className="w-44 shrink-0 bg-transparent text-caption font-medium text-ink"
-      >
-        {opciones.map((o) => (
-          <option key={o.valor} value={o.valor}>
-            {o.etiqueta}
-          </option>
-        ))}
-      </select>
+          su contenido y las cajitas quedaban de tamaños distintos. La caja es
+          propia (`appearance-none` + chevron dibujado): el select nativo gris
+          desentonaba con el resto de controles. */}
+      <span className="relative shrink-0">
+        <select
+          id={id}
+          value={valor}
+          onChange={(e) => onCambiar(e.target.value)}
+          className="w-44 appearance-none rounded-sm border border-asfalto/50 bg-base py-1 pl-2.5 pr-7 text-caption font-medium text-ink shadow-[var(--shadow-apoyo)] transition-colors duration-150 hover:border-atencion"
+        >
+          {opciones.map((o) => (
+            <option key={o.valor} value={o.valor}>
+              {o.etiqueta}
+            </option>
+          ))}
+        </select>
+        <ChevronDown
+          aria-hidden="true"
+          className="pointer-events-none absolute right-2 top-1/2 size-3.5 -translate-y-1/2 text-asfalto"
+          strokeWidth={1.75}
+        />
+      </span>
     </div>
   );
 }

@@ -33,8 +33,14 @@ export function SearchBox({
         {etiqueta}
       </label>
 
-      <div className="relative flex items-center border border-asfalto/50 bg-base focus-within:border-atencion">
-        <Search aria-hidden="true" className="pointer-events-none absolute left-3 size-4 text-asfalto" strokeWidth={1.75} />
+      {/* El halo ámbar del foco y la lupa que se enciende con él: la caja
+          responde a la mano antes de teclear nada. */}
+      <div className="group relative flex items-center rounded-sm border border-asfalto/50 bg-base shadow-[var(--shadow-apoyo)] transition-[border-color,box-shadow] duration-150 focus-within:border-atencion focus-within:ring-2 focus-within:ring-atencion/25 hover:border-atencion/70">
+        <Search
+          aria-hidden="true"
+          className="pointer-events-none absolute left-3 size-4 text-asfalto transition-colors duration-150 group-focus-within:text-atencion"
+          strokeWidth={1.75}
+        />
 
         <input
           id={id}

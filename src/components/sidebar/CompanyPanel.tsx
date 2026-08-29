@@ -1,6 +1,18 @@
 import { ChevronDown } from 'lucide-react';
-import { useDeferredValue, useId, useMemo, useState } from 'react';
+import {
+  useDeferredValue,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 
+import { useMenosMovimiento } from '../../animation/fisica';
+import { gsap } from '../../animation/gsap';
+import { Latido } from '../../animation/Latido';
+import { Pulsable } from '../../animation/Pulsable';
 import type { Orden } from '../../hooks/useFilteredCompanies';
 import type { Empresa } from '../../types/company';
 import { filtrarPorTexto, terminosDe } from '../../utils/busqueda';
@@ -142,7 +154,9 @@ export function CompanyPanel({
           className="flex w-full items-center justify-between gap-3 px-4 py-1.5 text-caption text-asfalto transition-colors duration-150 hover:text-ink"
         >
           <span>
-            <span className="font-mono tabular-nums">{nf.format(visibles.length)}</span>
+            <Latido valor={visibles.length} className="font-mono tabular-nums">
+              {nf.format(visibles.length)}
+            </Latido>
             {buscando && (
               <>
                 {' '}
@@ -163,7 +177,7 @@ export function CompanyPanel({
           </span>
         </button>
 
-        {opcionesAbiertas && (
+        <Desplegable abierto={opcionesAbiertas}>
           <div className="flex flex-col gap-2.5 px-4 pb-3">
             {/* Sin filas no hay nada que ordenar. */}
             {visibles.length > 0 && (
@@ -204,7 +218,7 @@ export function CompanyPanel({
               Incluir sin dato de tamaño vigente
             </label>
           </div>
-        )}
+        </Desplegable>
       </div>
 
       <CompanyList
@@ -218,6 +232,54 @@ export function CompanyPanel({
         }
       />
     </>
+  );
+}
+
+/**
+ * Despliegue con física: la altura se abre con GSAP y las filas de dentro
+ * entran escalonadas, en vez de aparecer todo de golpe. El contenido queda
+ * siempre montado (con `inert` mientras está cerrado, para que el tabulador
+ * no se cuele en controles invisibles); lo que se anima es solo la caja.
+ */
+function Desplegable({ abierto, children }: { abierto: boolean; children: ReactNode }) {
+  const quieto = useMenosMovimiento();
+  const cajaRef = useRef<HTMLDivElement>(null);
+  const primera = useRef(true);
+
+  useLayoutEffect(() => {
+    const caja = cajaRef.current;
+    if (!caja) return;
+
+    // Sin animar cuando no hay nadie mirando: el primer pintado no es una
+    // acción del usuario, con menos movimiento pedido se salta, y en una
+    // pestaña oculta el rAF está congelado y el tween se quedaría a medias.
+    if (primera.current || quieto || document.hidden) {
+      primera.current = false;
+      gsap.set(caja, { height: abierto ? 'auto' : 0 });
+      return;
+    }
+
+    if (abierto) {
+      gsap.fromTo(
+        caja,
+        { height: 0 },
+        { height: 'auto', duration: 0.35, ease: 'power2.out', clearProps: 'height' },
+      );
+      const filas = caja.querySelectorAll(':scope > div > *');
+      gsap.fromTo(
+        filas,
+        { opacity: 0, y: -6 },
+        { opacity: 1, y: 0, duration: 0.3, stagger: 0.05, ease: 'power2.out', clearProps: 'all' },
+      );
+    } else {
+      gsap.to(caja, { height: 0, duration: 0.25, ease: 'power2.in' });
+    }
+  }, [abierto, quieto]);
+
+  return (
+    <div ref={cajaRef} inert={!abierto} className="overflow-hidden" style={{ height: 0 }}>
+      {children}
+    </div>
   );
 }
 
@@ -247,13 +309,20 @@ function FacetsProvincia({
       </Chip>
       {facets.map((f) => (
         <Chip key={f.cod} activo={activa === f.cod} onClick={() => onElegir?.(f.cod)}>
-          {f.nombre} <span className="font-mono tabular-nums">{f.cumplen}</span>
+          {f.nombre}{' '}
+          <Latido valor={f.cumplen} className="font-mono tabular-nums">
+            {f.cumplen}
+          </Latido>
         </Chip>
       ))}
     </div>
   );
 }
 
+/**
+ * Chip con física (`Pulsable`): se eleva al apuntarlo y se hunde con resorte
+ * al pulsarlo. El activo se enciende en ámbar — el acento del filtro activo.
+ */
 function Chip({
   activo,
   onClick,
@@ -261,20 +330,21 @@ function Chip({
 }: {
   activo: boolean;
   onClick: () => void;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
-    <button
+    <Pulsable
       type="button"
+      elevado
       onClick={onClick}
       aria-pressed={activo}
-      className={`border px-2.5 py-1 text-caption transition-colors duration-150 ${
+      className={`rounded-sm border px-2.5 py-1 text-caption transition-colors duration-150 ${
         activo
-          ? 'border-navy-800 bg-navy-800 text-base'
-          : 'border-asfalto/50 text-ink hover:border-atencion'
+          ? 'border-atencion bg-atencion font-medium text-ink'
+          : 'border-asfalto/50 bg-base text-ink hover:border-atencion'
       }`}
     >
       {children}
-    </button>
+    </Pulsable>
   );
 }
