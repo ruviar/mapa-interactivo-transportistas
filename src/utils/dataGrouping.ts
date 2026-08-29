@@ -15,10 +15,20 @@
 import type { CodCCAA, CodProvincia, Dataset, Empresa, Regiones } from '../types/company';
 
 /**
- * Umbral de arranque: ≥4 empleados como proxy del "≥5 camiones" del cliente
- * (CLAUDE_BRIEF). Desde la Fase 4 el slider lo mueve; esto es solo el inicio.
+ * Umbral fijo: ≥4 empleados como proxy del "≥5 camiones" del cliente
+ * (CLAUDE_BRIEF). Ya no es ajustable desde la interfaz — es el único mínimo
+ * que colorea el mapa y filtra los listados en toda la herramienta.
  */
 export const UMBRAL_INICIAL = 4;
+
+/**
+ * Paradas no lineales para deslizables de tamaño (p. ej. el máximo del
+ * listado, en `CompanyPanel`). No es una escala lineal a propósito: el 94% de
+ * las empresas con dato tiene menos de 10 empleados, así que un recorrido
+ * 0-100 lineal gastaría casi todo el slider en un tramo sin nadie. Las
+ * paradas se aprietan donde está la masa de datos y se abren en la cola.
+ */
+export const PASOS_UMBRAL = [0, 1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 30, 50, 100];
 
 export function cumpleUmbral(empresa: Empresa, umbral: number): boolean {
   const { estado, flota } = empresa;

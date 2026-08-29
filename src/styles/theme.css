@@ -348,39 +348,6 @@ html {
   color: var(--color-atencion);
 }
 
-/* ------------------------------------------------------------- Filtros --- */
-
-/**
- * Slider de umbral: control real para teclado y lector de pantalla, pero el
- * arrastre y el dibujo los lleva el pulgar custom de `EmployeeThresholdSlider`
- * (`Draggable` de GSAP). Transparente y no `opacity:0` a propósito: así
- * conserva el anillo de foco de `@layer base` cuando se llega a él con Tab.
- * `pointer-events: none` le pasa el arrastre al pulgar de debajo.
- */
-.slider-umbral-fantasma {
-  appearance: none;
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  background: transparent;
-  pointer-events: none;
-  cursor: pointer;
-}
-.slider-umbral-fantasma::-webkit-slider-runnable-track,
-.slider-umbral-fantasma::-webkit-slider-thumb {
-  appearance: none;
-  background: transparent;
-  border: 0;
-}
-.slider-umbral-fantasma::-moz-range-track,
-.slider-umbral-fantasma::-moz-range-thumb {
-  appearance: none;
-  background: transparent;
-  border: 0;
-}
-
 /**
  * Foco de teclado visible en todos los controles (ámbar de atención: es el
  * único acento que queda en la paleta, así que también hace de foco).

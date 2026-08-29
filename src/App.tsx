@@ -98,19 +98,18 @@ export default function App() {
   /** El zoom se sale del encuadre del nivel actual hacia fuera (ver `NavegacionPorZoom`). */
   const alAlejarNivel = useCallback(() => nav.atras(), [nav]);
 
-  const [umbral, setUmbral] = useState(UMBRAL_INICIAL);
-  // Recontar 42.839 empresas y repintar 52 polígonos en cada píxel del slider
-  // atascaría el pulgar. Con el valor diferido el control responde al instante
-  // y el mapa llega un fotograma después, que es justo lo que se quiere.
-  const umbralAplicado = useDeferredValue(umbral);
+  // Fijo: ya no hay control en la interfaz para moverlo (ver `UMBRAL_INICIAL`
+  // en `utils/dataGrouping.ts`). Sigue siendo el mínimo que colorea el mapa y
+  // filtra los listados en todos los niveles.
+  const umbral = UMBRAL_INICIAL;
 
-  /** Fuente del dato de tamaño: mismo trato diferido que el umbral. */
+  /** Fuente del dato de tamaño: mismo trato diferido que antes el umbral. */
   const [fuenteFlota, setFuenteFlota] = useState<FiltroFlota>(FLOTA_INICIAL);
   const fuenteAplicada = useDeferredValue(fuenteFlota);
 
   const recuentos = useMemo(
-    () => (dataset ? contar(dataset, REGIONES, umbralAplicado, fuenteAplicada) : null),
-    [dataset, umbralAplicado, fuenteAplicada],
+    () => (dataset ? contar(dataset, REGIONES, umbral, fuenteAplicada) : null),
+    [dataset, umbral, fuenteAplicada],
   );
 
   const cumplenCCAA = useMemo(() => recuentos && cumplenPorRegion(recuentos.ccaa), [recuentos]);
@@ -146,12 +145,12 @@ export default function App() {
 
   const filtrosListado: FiltrosListado = useMemo(
     () => ({
-      umbralMin: umbralAplicado,
+      umbralMin: umbral,
       umbralMax: umbralMaxAplicado,
       filtroFlota: fuenteAplicada,
       incluirSinDato: incluirSinDatoAplicado,
     }),
-    [umbralAplicado, umbralMaxAplicado, fuenteAplicada, incluirSinDatoAplicado],
+    [umbral, umbralMaxAplicado, fuenteAplicada, incluirSinDatoAplicado],
   );
 
   // ── Ámbito del listado: una provincia, o una comunidad entera ──────────────
@@ -295,10 +294,8 @@ export default function App() {
     >
       <Header
         total={recuentos?.nacional.cumplen ?? null}
-        umbral={umbral}
         fuente={fuenteFlota}
         hayVerificadas={(dataset?.meta.resumen.verificada ?? 0) > 0}
-        onCambiarUmbral={setUmbral}
         onCambiarFuente={setFuenteFlota}
       />
 
@@ -350,7 +347,7 @@ export default function App() {
           segmentos={segmentos}
           titulo={titulo}
           conteo={ambito}
-          umbral={umbralAplicado}
+          umbral={umbral}
           umbralMax={umbralMaxAplicado}
           incluirSinDato={incluirSinDatoAplicado}
           regiones={listaRegiones}

@@ -1,11 +1,10 @@
 import { ChevronDown } from 'lucide-react';
 import { useDeferredValue, useId, useMemo, useState } from 'react';
 
-import { PASOS_UMBRAL } from '../layout/EmployeeThresholdSlider';
 import type { Orden } from '../../hooks/useFilteredCompanies';
 import type { Empresa } from '../../types/company';
 import { filtrarPorTexto, terminosDe } from '../../utils/busqueda';
-import { cumpleUmbral } from '../../utils/dataGrouping';
+import { cumpleUmbral, PASOS_UMBRAL } from '../../utils/dataGrouping';
 import { CompanyList } from './CompanyList';
 import { CompanyListHeader } from './CompanyListHeader';
 import { CompanyRow } from './CompanyRow';
@@ -15,19 +14,20 @@ import { SearchBox } from './SearchBox';
 const nf = new Intl.NumberFormat('es-ES');
 
 /**
- * Mismas paradas no lineales que el umbral mínimo (`PASOS_UMBRAL`), más una
- * parada extra al final: "sin máximo". Reutilizar la escala es lo que hace
- * que el deslizable sirva de algo — el 94% de las empresas con dato tiene
- * menos de 10 empleados, y un recorrido lineal 0-100000 dejaría todo el rango
- * útil apretado en el primer milímetro de la pista.
+ * Mismas paradas no lineales que el umbral mínimo (`PASOS_UMBRAL`), con "sin
+ * máximo" en el índice 0: el deslizable arranca a la izquierda, en reposo, y
+ * cuanto más se tira hacia la derecha más se aprieta el techo. Reutilizar la
+ * escala es lo que hace que el deslizable sirva de algo — el 94% de las
+ * empresas con dato tiene menos de 10 empleados, y un recorrido lineal
+ * 0-100000 dejaría todo el rango útil apretado en el primer milímetro.
  */
-const INDICE_SIN_MAXIMO = PASOS_UMBRAL.length;
+const PASOS_MAXIMO: readonly (number | null)[] = [null, ...PASOS_UMBRAL];
 
 function indiceDeMaximo(maximo: number | null): number {
-  if (maximo === null) return INDICE_SIN_MAXIMO;
-  let mejor = 0;
-  for (let i = 1; i < PASOS_UMBRAL.length; i++) {
-    if (Math.abs(PASOS_UMBRAL[i]! - maximo) < Math.abs(PASOS_UMBRAL[mejor]! - maximo)) mejor = i;
+  if (maximo === null) return 0;
+  let mejor = 1;
+  for (let i = 2; i < PASOS_MAXIMO.length; i++) {
+    if (Math.abs(PASOS_MAXIMO[i]! - maximo) < Math.abs(PASOS_MAXIMO[mejor]! - maximo)) mejor = i;
   }
   return mejor;
 }
@@ -184,12 +184,12 @@ export function CompanyPanel({
                 id={idMax}
                 type="range"
                 min={0}
-                max={INDICE_SIN_MAXIMO}
+                max={PASOS_MAXIMO.length - 1}
                 step={1}
                 value={indiceDeMaximo(umbralMax)}
                 onChange={(e) => {
                   const i = Number(e.target.value);
-                  onCambiarUmbralMax(i >= INDICE_SIN_MAXIMO ? null : PASOS_UMBRAL[i]!);
+                  onCambiarUmbralMax(PASOS_MAXIMO[i] ?? null);
                 }}
                 aria-valuetext={umbralMax === null ? 'sin máximo' : `${umbralMax} como máximo`}
                 className="w-full accent-atencion"

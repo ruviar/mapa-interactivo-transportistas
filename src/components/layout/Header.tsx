@@ -1,12 +1,10 @@
 import type { FiltroFlota } from '../../utils/dataGrouping';
-import { EmployeeThresholdSlider } from './EmployeeThresholdSlider';
 import { FleetSourceFilter } from './FleetSourceFilter';
 import { StatsCounter } from './StatsCounter';
 
 interface Props {
   /** Empresas que cumplen el filtro en toda España: el contador global no se pierde nunca. */
   total: number | null;
-  umbral: number;
   fuente: FiltroFlota;
   /**
    * ¿Hay flotas verificadas en el REAT en el dataset? Mientras no las haya
@@ -15,24 +13,17 @@ interface Props {
    * no un filtro. Aparecerá solo cuando el dato exista.
    */
   hayVerificadas: boolean;
-  onCambiarUmbral: (umbral: number) => void;
   onCambiarFuente: (fuente: FiltroFlota) => void;
 }
 
 /**
- * Cabecera. En escritorio los bloques van en una fila de 60 px; en móvil los
- * dos mandos —fuente y umbral— bajan cada uno a su propia línea a todo el
- * ancho: un slider de 110 px con el pulgar del dedo encima no es un control,
- * es una lotería.
+ * Cabecera. El umbral mínimo de tamaño ya no vive aquí como control: es fijo
+ * (`UMBRAL_INICIAL`, ver `utils/dataGrouping.ts`) y el máximo ajustable vive
+ * en el panel de cada listado — la cabecera se queda con lo que de verdad es
+ * global en todo momento, sin restarle alto a la lista con un control que se
+ * usaba poco.
  */
-export function Header({
-  total,
-  umbral,
-  fuente,
-  hayVerificadas,
-  onCambiarUmbral,
-  onCambiarFuente,
-}: Props) {
+export function Header({ total, fuente, hayVerificadas, onCambiarFuente }: Props) {
   return (
     <header className="flex shrink-0 flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-asfalto/40 bg-base px-4 py-2 sm:px-5 lg:h-15 lg:flex-nowrap lg:py-0">
       {/* `lg:contents` deshace el envoltorio en escritorio: allí la fila la
@@ -46,8 +37,6 @@ export function Header({
       </div>
 
       {hayVerificadas && <FleetSourceFilter fuente={fuente} onCambiar={onCambiarFuente} />}
-
-      <EmployeeThresholdSlider umbral={umbral} onCambiar={onCambiarUmbral} />
     </header>
   );
 }
