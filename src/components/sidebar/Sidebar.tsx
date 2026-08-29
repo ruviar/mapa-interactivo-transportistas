@@ -111,7 +111,10 @@ export function Sidebar({
       aria-label="Panel de consulta"
       style={hoja.esHoja ? { transform: `translateY(${hoja.desplazamiento}px)` } : undefined}
       className={[
-        'fixed inset-x-0 bottom-0 z-[1200] flex h-[82dvh] min-h-0 w-full min-w-0 flex-col',
+        // `h-dvh`: desplegada ocupa la pantalla entera, sin dejar una franja
+        // de mapa asomando arriba. Recogida sigue enseñando solo el asomo — el
+        // desplazamiento se calcula con el alto real, sea cual sea.
+        'fixed inset-x-0 bottom-0 z-[1200] flex h-dvh min-h-0 w-full min-w-0 flex-col',
         // La hoja se presenta como una lámina: esquinas superiores redondeadas
         // y sombra difusa del tema (var, no rgba fija: cambia con él).
         'rounded-t-2xl border-t border-ink/10 bg-base shadow-[var(--shadow-mano)]',
