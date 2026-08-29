@@ -2,6 +2,7 @@ import { divIcon, point } from 'leaflet';
 import type { Map as LeafletMap } from 'leaflet';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import {
+  AttributionControl,
   MapContainer,
   Marker,
   Pane,
@@ -69,10 +70,9 @@ export const TESELAS = {
     zoomMax: 13,
   },
   /**
-   * El control de atribución de Leaflet va desactivado (`attributionControl`)
-   * para no meter una cajita gris en la esquina del mapa; la de las teselas se
-   * cita, como la del GeoJSON, en `NotaDatos`. Sigue siendo obligatoria: no
-   * hay mapa base sin decir de quién es.
+   * Obligatoria: no hay mapa base sin decir de quién es. Se muestra en el
+   * control de atribución compacto del propio mapa (abajo a la izquierda,
+   * sin el prefijo "Leaflet"), junto a la de los límites GeoJSON.
    */
   atribucion: 'Mapa base: Esri',
 } as const;
@@ -204,7 +204,7 @@ export function SpainMap({
 
       <TileLayer
         url={TESELAS.fisico.url}
-        attribution={TESELAS.atribucion}
+        attribution={`${CCAA_GEO.attribution} · ${TESELAS.atribucion}`}
         maxNativeZoom={TESELAS.fisico.zoomMax}
         zIndex={1}
       />
@@ -291,6 +291,11 @@ export function SpainMap({
       {!decorativo && (
         <ZoomControl position="bottomright" zoomInTitle="Acercar" zoomOutTitle="Alejar" />
       )}
+
+      {/* Compacto y en su esquina, sin el prefijo "Leaflet": las fuentes se
+          citan sobre el propio mapa desde que la nota metodológica del pie
+          desapareció. */}
+      {!decorativo && <AttributionControl position="bottomleft" prefix={false} />}
     </MapContainer>
   );
 }

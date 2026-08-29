@@ -1,5 +1,4 @@
 import { CoverageChip } from '../layout/CoverageChip';
-import { NotaDatos } from '../layout/NotaDatos';
 // Extensión explícita: en un filesystem que no distingue mayúsculas
 // (Windows), './Odometro' colisiona con './odometro.ts' y resuelve al
 // módulo equivocado.
@@ -170,7 +169,6 @@ export function Sidebar({
       <div inert={recogida} className="flex min-h-0 flex-1 flex-col">
         <div className="shrink-0 border-b border-ink/10 px-4 pb-3">
           <CoverageChip conteo={conteo} ambito={titulo} />
-          <NotaDatos className="mt-2.5 lg:hidden" />
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">

@@ -300,6 +300,10 @@ export default function App() {
       />
 
       <main className="flex min-h-0 flex-1 flex-col lg:flex-row">
+        {/* Columna del mapa: el mapa arriba y su leyenda como pie propio. El
+            pie termina donde termina el mapa — el panel de consulta llega
+            hasta abajo sin nada por debajo. */}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {/* El mapa va en absoluto dentro de un contenedor relativo, y no como
             ítem flex con `h-full`: así su alto lo define una caja resuelta y no
             la negociación del flex, que ya dejó una vez el mapa en 0 px. */}
@@ -342,6 +346,9 @@ export default function App() {
           )}
         </div>
 
+        <Footer cortes={cortes} ambito={ambitoCoropleta} activa={recuentos !== null} />
+        </div>
+
         <Sidebar
           vista={vista}
           segmentos={segmentos}
@@ -377,8 +384,6 @@ export default function App() {
           onSeleccionarRegion={alSeleccionarCCAA}
         />
       </main>
-
-      <Footer cortes={cortes} ambito={ambitoCoropleta} activa={recuentos !== null} />
     </div>
   );
 }
