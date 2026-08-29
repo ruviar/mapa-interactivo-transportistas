@@ -123,7 +123,12 @@ export function Sidebar({
       ].join(' ')}
     >
       {/* --- Asomo: lo único visible con la hoja recogida ------------------ */}
-      <div ref={hoja.refAsomo} className="shrink-0">
+      {/* Lavado de acento de arriba abajo: la cabecera del panel tiene color
+          propio sin robarle protagonismo al dato. */}
+      <div
+        ref={hoja.refAsomo}
+        className="shrink-0 rounded-t-2xl bg-linear-to-b from-atencion/10 to-transparent lg:rounded-none"
+      >
         <SheetHandle hoja={hoja} controla={ID_PANEL} />
 
         <div className="px-4 pb-2.5 lg:pt-3">

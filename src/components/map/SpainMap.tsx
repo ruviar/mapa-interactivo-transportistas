@@ -69,15 +69,6 @@ export const TESELAS = {
     zoomMax: 13,
   },
   /**
-   * Mapa mudo del tema de la herramienta (`html.tema-app`): un lienzo gris
-   * claro donde el único color es el dato. El terreno de atlas queda para la
-   * landing, donde el mapa es escaparate y no instrumento.
-   */
-  gris: {
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
-    zoomMax: 16,
-  },
-  /**
    * El control de atribución de Leaflet va desactivado (`attributionControl`)
    * para no meter una cajita gris en la esquina del mapa; la de las teselas se
    * cita, como la del GeoJSON, en `NotaDatos`. Sigue siendo obligatoria: no
@@ -149,12 +140,6 @@ export function SpainMap({
   const nacional = vista.nivel === 'nacional';
   /** El azul de mar del tema, para tapar el relieve bajo la cartela canaria. */
   const colorMar = useMemo(() => leerPaleta().fondo, []);
-  /**
-   * Con el tema de la herramienta puesto, el mapa base es el lienzo gris y el
-   * relieve sobra. Se decide al montar: `main.tsx`/`Raiz` ponen la clase antes
-   * de renderizar, y el salto landing↔herramienta remonta este componente.
-   */
-  const temaClaro = useMemo(() => document.documentElement.classList.contains('tema-app'), []);
 
   /** Provincias de la comunidad activa. Nueva colección => `key` nueva en la capa. */
   const provinciasVisibles = useMemo(() => {
@@ -217,32 +202,21 @@ export function SpainMap({
         />
       )}
 
-      {temaClaro ? (
-        <TileLayer
-          url={TESELAS.gris.url}
-          attribution={TESELAS.atribucion}
-          maxNativeZoom={TESELAS.gris.zoomMax}
-          zIndex={1}
-        />
-      ) : (
-        <>
-          <TileLayer
-            url={TESELAS.fisico.url}
-            attribution={TESELAS.atribucion}
-            maxNativeZoom={TESELAS.fisico.zoomMax}
-            zIndex={1}
-          />
-          {/* `zIndex` explícito y no orden de inserción: las dos capas van al mismo
-              `tilePane` y el `multiply` de `.relieve` solo tiene sentido si el
-              color queda debajo. */}
-          <TileLayer
-            url={TESELAS.relieve.url}
-            maxNativeZoom={TESELAS.relieve.zoomMax}
-            className="relieve"
-            zIndex={2}
-          />
-        </>
-      )}
+      <TileLayer
+        url={TESELAS.fisico.url}
+        attribution={TESELAS.atribucion}
+        maxNativeZoom={TESELAS.fisico.zoomMax}
+        zIndex={1}
+      />
+      {/* `zIndex` explícito y no orden de inserción: las dos capas van al mismo
+          `tilePane` y el `multiply` de `.relieve` solo tiene sentido si el
+          color queda debajo. */}
+      <TileLayer
+        url={TESELAS.relieve.url}
+        maxNativeZoom={TESELAS.relieve.zoomMax}
+        className="relieve"
+        zIndex={2}
+      />
 
       {/* Canarias viaja desplazada +5,2° lon / +7,7° lat para caber en el
           encuadre (ver `canarias.desplazamiento` en el GeoJSON). Sobre un mapa

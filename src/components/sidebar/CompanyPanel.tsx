@@ -166,7 +166,7 @@ export function CompanyPanel({
             {visibles.length === 1 ? 'empresa' : 'empresas'}
           </span>
 
-          <span className="flex items-center gap-1 uppercase tracking-[0.08em]">
+          <span className="flex items-center gap-1 font-medium uppercase tracking-[0.08em] text-atencion">
             Filtros y orden
             {hayFiltroActivo && <span className="size-1.5 rounded-full bg-atencion" aria-hidden="true" />}
             <ChevronDown
@@ -178,7 +178,8 @@ export function CompanyPanel({
         </button>
 
         <Desplegable abierto={opcionesAbiertas}>
-          <div className="flex flex-col gap-2.5 px-4 pb-3">
+          {/* Tarjeta tintada: los mandos se agrupan en su propia lámina de color. */}
+          <div className="mx-4 mb-3 flex flex-col gap-2.5 rounded-xl bg-atencion/6 p-3">
             {/* Sin filas no hay nada que ordenar. */}
             {visibles.length > 0 && (
               <CompanyListHeader orden={orden} onCambiarOrden={onCambiarOrden} />
@@ -340,8 +341,8 @@ function Chip({
       aria-pressed={activo}
       className={`rounded-full border px-3 py-1 text-caption transition-colors duration-150 ${
         activo
-          ? 'border-atencion bg-atencion font-medium text-superficie'
-          : 'border-ink/10 bg-superficie text-ink hover:border-atencion/60'
+          ? 'border-atencion bg-linear-to-b from-atencion-vivo to-atencion font-medium text-superficie'
+          : 'border-transparent bg-atencion/10 text-atencion hover:bg-atencion/15'
       }`}
     >
       {children}

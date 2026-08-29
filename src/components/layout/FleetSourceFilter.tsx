@@ -46,7 +46,9 @@ export function FleetSourceFilter({
               aria-pressed={activa}
               title={opcion.titulo}
               className={`rounded-full px-2.5 py-0.5 text-caption uppercase tracking-wide transition-colors duration-150 ${
-                activa ? 'bg-atencion font-medium text-superficie' : 'text-asfalto hover:text-ink'
+                activa
+                  ? 'bg-linear-to-b from-atencion-vivo to-atencion font-medium text-superficie'
+                  : 'bg-atencion/10 text-atencion hover:bg-atencion/15'
               }`}
             >
               {opcion.etiqueta}

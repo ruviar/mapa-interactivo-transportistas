@@ -63,7 +63,9 @@ export function RegionList({
             className="flex w-full items-baseline justify-between gap-3 border-b border-ink/5 px-4 py-2.5 text-left transition-colors duration-150 hover:bg-atencion/10"
           >
             <span className="truncate text-body-sm">{region.nombre}</span>
-            <span className="shrink-0 font-mono text-body-sm tabular-nums text-asfalto">
+            {/* La cifra como distintivo tintado: la lista gana color sin perder
+                lectura de columna (ancho mínimo común y tabular-nums). */}
+            <span className="shrink-0 rounded-full bg-atencion/10 px-2 py-0.5 text-center font-mono text-caption tabular-nums text-atencion min-w-11">
               {nf.format(region.cumplen)}
             </span>
           </button>

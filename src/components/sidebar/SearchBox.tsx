@@ -33,13 +33,12 @@ export function SearchBox({
         {etiqueta}
       </label>
 
-      {/* Campo de búsqueda de sistema: relleno gris quieto que se vuelve
-          superficie blanca con halo del acento al recibir el foco, y la lupa
-          se enciende con él. */}
-      <div className="group relative flex items-center rounded-lg border border-transparent bg-ink/5 transition-[background-color,border-color,box-shadow] duration-150 focus-within:border-atencion/50 focus-within:bg-superficie focus-within:shadow-[var(--shadow-apoyo)] focus-within:ring-2 focus-within:ring-atencion/20 hover:bg-ink/8">
+      {/* Campo con tinte del acento en reposo —la lupa ya de color— que se
+          vuelve superficie blanca con halo al recibir el foco. */}
+      <div className="group relative flex items-center rounded-lg border border-transparent bg-atencion/8 transition-[background-color,border-color,box-shadow] duration-150 focus-within:border-atencion/50 focus-within:bg-superficie focus-within:shadow-[var(--shadow-apoyo)] focus-within:ring-2 focus-within:ring-atencion/20 hover:bg-atencion/12">
         <Search
           aria-hidden="true"
-          className="pointer-events-none absolute left-3 size-4 text-asfalto transition-colors duration-150 group-focus-within:text-atencion"
+          className="pointer-events-none absolute left-3 size-4 text-atencion"
           strokeWidth={1.75}
         />
 

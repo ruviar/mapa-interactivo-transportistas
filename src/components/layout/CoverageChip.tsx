@@ -39,9 +39,9 @@ export function CoverageChip({ conteo, ambito }: Props) {
         </span>
       </div>
 
-      <div className="mt-1 h-0.5 w-full bg-asfalto/25" aria-hidden="true">
+      <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-asfalto/20" aria-hidden="true">
         <div
-          className="h-full bg-navy-800 transition-[width] duration-200"
+          className="h-full rounded-full bg-navy-800 transition-[width] duration-200"
           style={{ width: ratio === null ? '0%' : `${Math.max(ratio * 100, 0.5)}%` }}
         />
       </div>
