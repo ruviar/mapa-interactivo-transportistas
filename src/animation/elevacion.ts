@@ -13,18 +13,21 @@ export interface Sombras {
   mano: string;
 }
 
-let cache: Sombras | null = null;
-
-/** Debe llamarse con el CSS ya aplicado (en render), nunca en el módulo. */
+/**
+ * Debe llamarse con el CSS ya aplicado (en render), nunca en el módulo.
+ *
+ * Sin caché de módulo a propósito: las sombras cambian con el tema de la
+ * herramienta (`html.tema-app`, ver theme.css) y una caché serviría las de la
+ * landing dentro de la herramienta o al revés. `useSombras` ya memoiza por
+ * montaje, y el salto landing↔herramienta remonta todo el árbol.
+ */
 export function leerSombras(): Sombras {
-  if (cache) return cache;
   const estilo = getComputedStyle(document.documentElement);
-  cache = {
+  return {
     apoyo: estilo.getPropertyValue('--shadow-apoyo').trim(),
     alta: estilo.getPropertyValue('--shadow-alta').trim(),
     mano: estilo.getPropertyValue('--shadow-mano').trim(),
   };
-  return cache;
 }
 
 export function useSombras(): Sombras {

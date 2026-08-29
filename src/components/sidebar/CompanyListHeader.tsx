@@ -100,7 +100,7 @@ function FilaOrden({
           id={id}
           value={valor}
           onChange={(e) => onCambiar(e.target.value)}
-          className="w-44 appearance-none rounded-sm border border-asfalto/50 bg-base py-1 pl-2.5 pr-7 text-caption font-medium text-ink shadow-[var(--shadow-apoyo)] transition-colors duration-150 hover:border-atencion"
+          className="w-44 appearance-none rounded-lg border border-ink/10 bg-superficie py-1.5 pl-3 pr-7 text-caption font-medium text-ink shadow-[var(--shadow-apoyo)] transition-colors duration-150 hover:border-atencion/50"
         >
           {opciones.map((o) => (
             <option key={o.valor} value={o.valor}>

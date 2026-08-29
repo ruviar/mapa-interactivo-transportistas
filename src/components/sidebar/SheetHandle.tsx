@@ -23,10 +23,10 @@ export function SheetHandle({ hoja, controla }: { hoja: Hoja; controla: string }
       <span className="sr-only">
         {hoja.desplegada ? 'Recoger el panel de consulta' : 'Desplegar el panel de consulta'}
       </span>
-      {/* Barra cuadrada, sin redondeo: el resto de controles tampoco lo lleva. */}
+      {/* Píldora de asidero, como la de cualquier hoja del sistema. */}
       <span
         aria-hidden="true"
-        className="block h-[3px] w-10 bg-asfalto group-focus-visible:bg-atencion group-focus-visible:outline-2 group-focus-visible:outline-offset-4 group-focus-visible:outline-atencion"
+        className="block h-[5px] w-9 rounded-full bg-asfalto/50 group-focus-visible:bg-atencion group-focus-visible:outline-2 group-focus-visible:outline-offset-4 group-focus-visible:outline-atencion"
       />
     </button>
   );

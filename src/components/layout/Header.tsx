@@ -25,11 +25,12 @@ interface Props {
  */
 export function Header({ total, fuente, hayVerificadas, onCambiarFuente }: Props) {
   return (
-    <header className="flex shrink-0 flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-asfalto/40 bg-base px-4 py-2 sm:px-5 lg:h-15 lg:flex-nowrap lg:py-0">
+    // Vidrio esmerilado sobre el lienzo: la cabecera flota sin pedir atención.
+    <header className="flex shrink-0 flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-ink/10 bg-base/80 px-4 py-2 backdrop-blur-xl sm:px-5 lg:h-15 lg:flex-nowrap lg:py-0">
       {/* `lg:contents` deshace el envoltorio en escritorio: allí la fila la
           reparte la propia cabecera y este div solo estorbaría. */}
       <div className="flex w-full min-w-0 items-baseline justify-between gap-3 lg:contents">
-        <h1 className="rotulo truncate text-body-sm sm:text-body lg:text-label-lg">
+        <h1 className="truncate text-body-sm font-semibold tracking-tight sm:text-body lg:text-label-lg">
           Transportistas de España
         </h1>
 

@@ -32,7 +32,7 @@ export function FleetSourceFilter({
   onCambiar: (fuente: FiltroFlota) => void;
 }) {
   return (
-    <div className="flex w-full items-center gap-3 rounded-sm border border-asfalto/50 px-3 py-1.5 lg:w-auto">
+    <div className="flex w-full items-center gap-3 rounded-full border border-ink/10 bg-superficie px-3 py-1.5 lg:w-auto">
       <span className="shrink-0 text-caption uppercase tracking-[0.1em] text-asfalto">Fuente</span>
 
       <div role="group" aria-label="Fuente del dato de tamaño" className="flex gap-1">
@@ -45,8 +45,8 @@ export function FleetSourceFilter({
               onClick={() => onCambiar(opcion.valor)}
               aria-pressed={activa}
               title={opcion.titulo}
-              className={`rounded-sm px-2 py-0.5 text-caption uppercase tracking-wide transition-colors duration-150 ${
-                activa ? 'bg-atencion font-medium text-ink' : 'text-asfalto hover:text-ink'
+              className={`rounded-full px-2.5 py-0.5 text-caption uppercase tracking-wide transition-colors duration-150 ${
+                activa ? 'bg-atencion font-medium text-superficie' : 'text-asfalto hover:text-ink'
               }`}
             >
               {opcion.etiqueta}

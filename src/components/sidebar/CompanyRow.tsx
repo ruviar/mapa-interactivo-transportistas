@@ -19,7 +19,7 @@ export function CompanyRow({ empresa, style }: { empresa: Empresa; style: CSSPro
   return (
     <div
       style={style}
-      className="flex items-center gap-3 border-b border-asfalto/25 px-4 transition-colors duration-150 hover:bg-atencion/12"
+      className="flex items-center gap-3 border-b border-ink/5 px-4 transition-colors duration-150 hover:bg-atencion/10"
     >
       <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5">
         <p className="truncate text-body-sm font-medium" title={empresa.nombre}>

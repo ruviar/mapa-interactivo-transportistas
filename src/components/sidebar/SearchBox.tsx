@@ -28,14 +28,15 @@ export function SearchBox({
   const id = useId();
 
   return (
-    <div className="shrink-0 border-b border-asfalto/40 px-4 py-2.5">
+    <div className="shrink-0 border-b border-ink/10 px-4 py-2.5">
       <label htmlFor={id} className="sr-only">
         {etiqueta}
       </label>
 
-      {/* El halo ámbar del foco y la lupa que se enciende con él: la caja
-          responde a la mano antes de teclear nada. */}
-      <div className="group relative flex items-center rounded-sm border border-asfalto/50 bg-base shadow-[var(--shadow-apoyo)] transition-[border-color,box-shadow] duration-150 focus-within:border-atencion focus-within:ring-2 focus-within:ring-atencion/25 hover:border-atencion/70">
+      {/* Campo de búsqueda de sistema: relleno gris quieto que se vuelve
+          superficie blanca con halo del acento al recibir el foco, y la lupa
+          se enciende con él. */}
+      <div className="group relative flex items-center rounded-lg border border-transparent bg-ink/5 transition-[background-color,border-color,box-shadow] duration-150 focus-within:border-atencion/50 focus-within:bg-superficie focus-within:shadow-[var(--shadow-apoyo)] focus-within:ring-2 focus-within:ring-atencion/20 hover:bg-ink/8">
         <Search
           aria-hidden="true"
           className="pointer-events-none absolute left-3 size-4 text-asfalto transition-colors duration-150 group-focus-within:text-atencion"

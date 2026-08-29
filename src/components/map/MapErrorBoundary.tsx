@@ -52,7 +52,7 @@ export class MapErrorBoundary extends Component<Props, State> {
             this.setState({ fallo: false });
             this.props.onReintentar();
           }}
-          className="border border-asfalto/50 px-4 py-2 text-body-sm font-medium uppercase tracking-wide text-ink transition-colors duration-150 hover:border-atencion hover:text-atencion"
+          className="rounded-lg border border-ink/10 bg-superficie px-4 py-2 text-body-sm font-medium tracking-wide text-ink shadow-[var(--shadow-apoyo)] transition-colors duration-150 hover:border-atencion hover:text-atencion"
         >
           Volver al mapa nacional
         </button>

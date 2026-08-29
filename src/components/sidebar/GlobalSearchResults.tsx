@@ -29,7 +29,7 @@ function Fila({ index, style, resultados, nombresProvincia, onElegir }: RowCompo
       style={style}
       onClick={() => onElegir(empresa)}
       title={`Abrir ${nombresProvincia.get(empresa.provincia) ?? 'su provincia'} con esta empresa destacada`}
-      className="flex w-full items-center gap-3 border-b border-asfalto/25 px-4 text-left transition-colors duration-150 hover:bg-atencion/12"
+      className="flex w-full items-center gap-3 border-b border-ink/5 px-4 text-left transition-colors duration-150 hover:bg-atencion/10"
     >
       <span className="flex min-w-0 flex-1 flex-col justify-center gap-0.5">
         <span className="truncate text-body-sm font-medium">{empresa.nombre}</span>
@@ -87,7 +87,7 @@ export function GlobalSearchResults({
 
   return (
     <>
-      <p className="shrink-0 border-b border-asfalto/25 px-4 py-1.5 text-caption text-asfalto">
+      <p className="shrink-0 border-b border-ink/5 px-4 py-1.5 text-caption text-asfalto">
         <span className="font-mono tabular-nums">{nf.format(resultados.length)}</span>{' '}
         {resultados.length === 1 ? 'empresa activa' : 'empresas activas'} en toda España — sin
         aplicar el umbral

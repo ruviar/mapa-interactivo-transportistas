@@ -60,7 +60,7 @@ export function RegionList({
           <button
             type="button"
             onClick={() => onSeleccionar(region.cod)}
-            className="flex w-full items-baseline justify-between gap-3 border-b border-asfalto/25 px-4 py-2.5 text-left transition-colors duration-150 hover:bg-atencion/12"
+            className="flex w-full items-baseline justify-between gap-3 border-b border-ink/5 px-4 py-2.5 text-left transition-colors duration-150 hover:bg-atencion/10"
           >
             <span className="truncate text-body-sm">{region.nombre}</span>
             <span className="shrink-0 font-mono text-body-sm tabular-nums text-asfalto">

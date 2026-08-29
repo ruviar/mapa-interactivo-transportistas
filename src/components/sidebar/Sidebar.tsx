@@ -113,11 +113,13 @@ export function Sidebar({
       style={hoja.esHoja ? { transform: `translateY(${hoja.desplazamiento}px)` } : undefined}
       className={[
         'fixed inset-x-0 bottom-0 z-[1200] flex h-[82dvh] min-h-0 w-full min-w-0 flex-col',
-        'border-t border-asfalto bg-base shadow-[0_-2px_14px_-8px_rgba(27,33,29,0.55)]',
+        // La hoja se presenta como una lámina: esquinas superiores redondeadas
+        // y sombra difusa del tema (var, no rgba fija: cambia con él).
+        'rounded-t-2xl border-t border-ink/10 bg-base shadow-[var(--shadow-mano)]',
         // Con el dedo encima no puede haber transición: la hoja sigue al pulgar.
         hoja.arrastrando ? '' : 'transition-transform duration-[var(--animate-duration-panel)] ease-out',
         'lg:static lg:z-auto lg:h-auto lg:w-[34%] lg:min-w-[320px] lg:max-w-[420px] lg:shrink-0',
-        'lg:border-l lg:border-t-0 lg:border-asfalto/40 lg:shadow-none lg:transition-none',
+        'lg:rounded-none lg:border-l lg:border-t-0 lg:border-ink/10 lg:shadow-none lg:transition-none',
       ].join(' ')}
     >
       {/* --- Asomo: lo único visible con la hoja recogida ------------------ */}
@@ -128,7 +130,7 @@ export function Sidebar({
           <Breadcrumb segmentos={segmentos} />
 
           <div className="mt-2 flex items-baseline justify-between gap-3">
-            <h2 className="rotulo truncate text-heading leading-tight">
+            <h2 className="truncate text-heading font-semibold leading-tight tracking-tight">
               {titulo}
             </h2>
             <p
@@ -161,7 +163,7 @@ export function Sidebar({
       {/* `inert` mientras no se ve: si no, el tabulador se va a un listado que
           está fuera de pantalla y no hay forma de saber dónde ha ido el foco. */}
       <div inert={recogida} className="flex min-h-0 flex-1 flex-col">
-        <div className="shrink-0 border-b border-asfalto/40 px-4 pb-3">
+        <div className="shrink-0 border-b border-ink/10 px-4 pb-3">
           <CoverageChip conteo={conteo} ambito={titulo} />
           <NotaDatos className="mt-2.5 lg:hidden" />
         </div>

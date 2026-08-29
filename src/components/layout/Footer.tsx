@@ -16,7 +16,7 @@ interface Props {
  */
 export function Footer({ cortes, ambito, activa }: Props) {
   return (
-    <footer className="hidden shrink-0 flex-wrap items-center justify-between gap-x-8 gap-y-3 border-t border-asfalto/40 bg-base px-5 py-2.5 lg:flex">
+    <footer className="hidden shrink-0 flex-wrap items-center justify-between gap-x-8 gap-y-3 border-t border-ink/10 bg-base px-5 py-2.5 lg:flex">
       <MapLegend cortes={cortes} ambito={ambito} activa={activa} />
       <NotaDatos className="max-w-prose" />
     </footer>

@@ -50,6 +50,7 @@
   --color-navy-800: #16305a; /* fondo del hero, zona superior; superficie oscura secundaria */
   --color-atencion: #dfa23a; /* ámbar, acento único: CTA, filtro activo, hover */
   --color-asfalto: #8b93a1; /* gris-azulado neutro, bordes y texto secundario */
+  --color-superficie: #ffffff; /* tarjetas y campos sobre el lienzo (lo usa la herramienta) */
   /* Mar de carta náutica: navy-800 rebajado sobre crema (~45%), no un azul
      traído de fuera. La tinta sobre el mar mantiene ~8:1 de contraste. */
   --color-mar: #9fb0c9;
@@ -104,6 +105,55 @@
   --shadow-apoyo: 0 1px 2px -1px rgba(12, 30, 61, 0.16);
   --shadow-alta: 0 4px 12px -5px rgba(12, 30, 61, 0.42);
   --shadow-mano: 0 -8px 26px -12px rgba(12, 30, 61, 0.55);
+}
+
+/**
+ * Tema de la herramienta: lienzo claro, neutro y silencioso — la estética de
+ * un sistema operativo, no la de una landing. Vive como override de las
+ * mismas variables (Tailwind 4 resuelve las utilidades con `var()`), activado
+ * por `Raiz`/`main.tsx` con la clase `tema-app` en `<html>` solo mientras la
+ * herramienta está en pantalla: la landing conserva intacto su navy/crema/
+ * ámbar. `leerPaleta()` y `leerSombras()` leen de `documentElement`, así que
+ * el mapa y la física recogen estos valores sin tocar ni una línea suya.
+ */
+html.tema-app {
+  --color-base: #f5f5f7; /* el gris-plata de lienzo */
+  --color-ink: #1d1d1f; /* texto casi negro */
+  --color-navy-950: #1d1d1f; /* las "superficies oscuras" pasan a neutro */
+  --color-navy-800: #3a3a3c;
+  --color-atencion: #0071e3; /* azul de acción: CTA, filtro activo, foco */
+  --color-asfalto: #86868b; /* gris de texto secundario */
+  --color-mar: #e8edf3; /* mar de mapa mudo, apenas más frío que el lienzo */
+
+  /* Coroplética azul secuencial, del lienzo al azul profundo. El reparto de
+     cifras claras/oscuras de `VAR_CIFRA` (tinta hasta el paso 3, base en 4-5)
+     sigue valiendo tal cual con estos valores. */
+  --color-mapa-0: #eef1f5;
+  --color-mapa-1: #d3e3f8;
+  --color-mapa-2: #a9c9f0;
+  --color-mapa-3: #6fa5e4;
+  --color-mapa-4: #3b7cd0;
+  --color-mapa-5: #1a56ab;
+
+  /* Sombras difusas y neutras, sin tinte navy. */
+  --shadow-apoyo: 0 1px 3px rgba(0, 0, 0, 0.07);
+  --shadow-alta: 0 12px 32px -12px rgba(0, 0, 0, 0.22);
+  --shadow-mano: 0 -10px 34px -14px rgba(0, 0, 0, 0.3);
+}
+
+/* El control de zoom, a juego con el resto de superficies del tema. */
+html.tema-app .leaflet-control-zoom {
+  overflow: hidden;
+  border-radius: 10px;
+  box-shadow: var(--shadow-alta);
+}
+html.tema-app .leaflet-control-zoom a {
+  background: var(--color-superficie);
+  color: var(--color-ink);
+}
+html.tema-app .leaflet-control-zoom a:hover {
+  background: var(--color-superficie);
+  color: var(--color-atencion);
 }
 
 /**

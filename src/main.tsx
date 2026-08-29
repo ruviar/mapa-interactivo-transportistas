@@ -11,6 +11,12 @@ if (!raiz) throw new Error('Falta #root en el index.html');
 const parametros = new URLSearchParams(window.location.search);
 const banco = parametros.get('lab');
 
+// El tema de la herramienta (ver `html.tema-app` en theme.css) tiene que estar
+// puesto ANTES del primer render: `leerPaleta()` y `leerSombras()` leen los
+// valores computados durante el montaje del mapa, no en un efecto posterior.
+// A partir de aquí lo lleva `Raiz` en cada salto de vista.
+document.documentElement.classList.toggle('tema-app', parametros.has('app'));
+
 function elegir() {
   /** Banco de pruebas de la Fase 6: temporal, se va al cerrar la fase. No participa del toggle landing/app de `Raiz`. */
   if (banco === '6' || banco === '') return <Fase6Lab />;

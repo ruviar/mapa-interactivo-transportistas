@@ -146,7 +146,7 @@ export function CompanyPanel({
         </div>
       )}
 
-      <div className="shrink-0 border-b border-asfalto/40">
+      <div className="shrink-0 border-b border-ink/10">
         <button
           type="button"
           onClick={() => setOpcionesAbiertas((v) => !v)}
@@ -302,7 +302,7 @@ function FacetsProvincia({
     <div
       role="group"
       aria-label="Acotar a una provincia"
-      className="flex shrink-0 flex-wrap gap-1.5 border-b border-asfalto/40 px-4 py-2.5"
+      className="flex shrink-0 flex-wrap gap-1.5 border-b border-ink/10 px-4 py-2.5"
     >
       <Chip activo={activa === null} onClick={() => onElegir?.(null)}>
         Todas
@@ -338,10 +338,10 @@ function Chip({
       elevado
       onClick={onClick}
       aria-pressed={activo}
-      className={`rounded-sm border px-2.5 py-1 text-caption transition-colors duration-150 ${
+      className={`rounded-full border px-3 py-1 text-caption transition-colors duration-150 ${
         activo
-          ? 'border-atencion bg-atencion font-medium text-ink'
-          : 'border-asfalto/50 bg-base text-ink hover:border-atencion'
+          ? 'border-atencion bg-atencion font-medium text-superficie'
+          : 'border-ink/10 bg-superficie text-ink hover:border-atencion/60'
       }`}
     >
       {children}
