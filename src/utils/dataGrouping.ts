@@ -22,13 +22,19 @@ import type { CodCCAA, CodProvincia, Dataset, Empresa, Regiones } from '../types
 export const UMBRAL_INICIAL = 4;
 
 /**
- * Paradas no lineales para deslizables de tamaño (p. ej. el máximo del
- * listado, en `CompanyPanel`). No es una escala lineal a propósito: el 94% de
- * las empresas con dato tiene menos de 10 empleados, así que un recorrido
- * 0-100 lineal gastaría casi todo el slider en un tramo sin nadie. Las
- * paradas se aprietan donde está la masa de datos y se abren en la cola.
+ * Paradas no lineales para el deslizable de tamaño máximo, en `CompanyPanel`.
+ * No es una escala lineal a propósito: el 94% de las empresas con dato tiene
+ * menos de 10 empleados, así que un recorrido lineal gastaría casi todo el
+ * slider en un tramo sin nadie. Las paradas se aprietan donde está la masa de
+ * datos y se abren en la cola — pero la cola sigue teniendo peso real: 275 de
+ * 1.860 empresas con dato (el 15%) superan los 100 empleados, hasta 3.512
+ * (los grandes operadores logísticos, ver el comentario de `ORDEN_INICIAL` en
+ * `hooks/useFilteredCompanies.ts`), así que la escala sube hasta 2.000 en vez
+ * de cortar en 100 y saltar directa a "sin máximo".
  */
-export const PASOS_UMBRAL = [0, 1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 30, 50, 100];
+export const PASOS_TAMANO_MAXIMO = [
+  0, 1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 30, 50, 100, 150, 200, 300, 500, 1000, 2000,
+];
 
 export function cumpleUmbral(empresa: Empresa, umbral: number): boolean {
   const { estado, flota } = empresa;

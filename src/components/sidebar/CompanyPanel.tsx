@@ -4,7 +4,7 @@ import { useDeferredValue, useId, useMemo, useState } from 'react';
 import type { Orden } from '../../hooks/useFilteredCompanies';
 import type { Empresa } from '../../types/company';
 import { filtrarPorTexto, terminosDe } from '../../utils/busqueda';
-import { cumpleUmbral, PASOS_UMBRAL } from '../../utils/dataGrouping';
+import { cumpleUmbral, PASOS_TAMANO_MAXIMO } from '../../utils/dataGrouping';
 import { CompanyList } from './CompanyList';
 import { CompanyListHeader } from './CompanyListHeader';
 import { CompanyRow } from './CompanyRow';
@@ -14,14 +14,11 @@ import { SearchBox } from './SearchBox';
 const nf = new Intl.NumberFormat('es-ES');
 
 /**
- * Mismas paradas no lineales que el umbral mínimo (`PASOS_UMBRAL`), con "sin
- * máximo" en el índice 0: el deslizable arranca a la izquierda, en reposo, y
- * cuanto más se tira hacia la derecha más se aprieta el techo. Reutilizar la
- * escala es lo que hace que el deslizable sirva de algo — el 94% de las
- * empresas con dato tiene menos de 10 empleados, y un recorrido lineal
- * 0-100000 dejaría todo el rango útil apretado en el primer milímetro.
+ * `PASOS_TAMANO_MAXIMO` con "sin máximo" en el índice 0: el deslizable
+ * arranca a la izquierda, en reposo, y cuanto más se tira hacia la derecha
+ * más generoso es el techo.
  */
-const PASOS_MAXIMO: readonly (number | null)[] = [null, ...PASOS_UMBRAL];
+const PASOS_MAXIMO: readonly (number | null)[] = [null, ...PASOS_TAMANO_MAXIMO];
 
 function indiceDeMaximo(maximo: number | null): number {
   if (maximo === null) return 0;
