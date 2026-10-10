@@ -1,9 +1,9 @@
 /**
  * Tablas INE de provincias y comunidades autónomas.
  *
- * El código INE es la clave de cruce entre el Excel de SABI y los GeoJSON:
+ * El código INE es la clave de cruce entre el fichero del Ministerio y los GeoJSON:
  * los nombres NO sirven porque cada fuente los escribe distinto
- * (SABI: "a Coruña", "Jaen", "Alava" · GeoJSON: "A Coruña", "Jaén", "Araba/Álava").
+ * (Ministerio: "I. BALEARS", "JAEN", "ALAVA" · GeoJSON: "A Coruña", "Jaén", "Araba/Álava").
  */
 
 /** cod_ccaa INE -> nombre oficial */
@@ -119,13 +119,13 @@ export function normalizar(texto) {
 }
 
 /**
- * Grafías alternativas que aparecen en SABI, en los GeoJSON o en uso común.
+ * Grafías alternativas que aparecen en el fichero del Ministerio, en los GeoJSON o en uso común.
  * Las formas oficiales (y cada mitad de las bilingües "X/Y") se añaden solas.
  */
 const ALIAS = {
   '01': ['alava', 'araba'],
   '03': ['alacant'],
-  '07': ['baleares', 'islas baleares', 'illes balears'],
+  '07': ['baleares', 'islas baleares', 'illes balears', 'i balears'],
   '12': ['castello', 'castellon de la plana'],
   '15': ['coruna', 'la coruna'],
   '17': ['gerona'],
@@ -134,7 +134,7 @@ const ALIAS = {
   '32': ['orense'],
   '33': ['principado de asturias', 'oviedo'],
   '35': ['las palmas de gran canaria', 'gran canaria'],
-  '38': ['tenerife', 'sta cruz de tenerife'],
+  '38': ['tenerife', 'sta cruz de tenerife', 's c tenerife'],
   '39': ['santander'],
   '46': ['valencia'],
   '48': ['vizcaya', 'bizkaia'],

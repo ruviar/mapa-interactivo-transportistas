@@ -1,72 +1,60 @@
 /**
- * Recuento de empresas por región para la coropleta.
+ * Filtro por tamaño de flota y recuento de empresas por región.
  *
- * "Cumplir el filtro" no es solo superar el umbral de tamaño: se exige además
- * que la empresa esté activa y que su dato de flota siga vigente. Una empresa
- * extinguida en 2019 o con la última plantilla publicada en 2021 no se cuenta,
- * aunque su cifra sea alta — si no, el mapa pintaría oscuras las provincias con
- * más histórico en lugar de las que hoy tienen más transportistas.
- *
- * Ese mismo criterio deja fuera a la mayoría del export (SABI publica plantilla
- * de ~2.000 de 45.261), así que el recuento se acompaña siempre de la cobertura
- * de dato y nunca se presentan mezclados: son dos cosas distintas.
+ * El tamaño es el nº de vehículos adscritos a la autorización, tal como lo
+ * publica el Ministerio: un dato del registro que tienen todas las empresas.
+ * Por eso hay un solo filtro —un rango de vehículos— y manda en todas partes
+ * a la vez: colorea la coropleta, llena los listados y mueve los contadores.
  */
 
 import type { CodCCAA, CodProvincia, Dataset, Empresa, Regiones } from '../types/company';
 
-/**
- * Umbral fijo: ≥4 empleados como proxy del "≥5 camiones" del cliente
- * (CLAUDE_BRIEF). Ya no es ajustable desde la interfaz — es el único mínimo
- * que colorea el mapa y filtra los listados en toda la herramienta.
- */
-export const UMBRAL_INICIAL = 4;
-
-/**
- * Paradas no lineales para el deslizable de tamaño máximo, en `CompanyPanel`.
- * No es una escala lineal a propósito: el 94% de las empresas con dato tiene
- * menos de 10 empleados, así que un recorrido lineal gastaría casi todo el
- * slider en un tramo sin nadie. Las paradas se aprietan donde está la masa de
- * datos y se abren en la cola — pero la cola sigue teniendo peso real: 275 de
- * 1.860 empresas con dato (el 15%) superan los 100 empleados, hasta 3.512
- * (los grandes operadores logísticos, ver el comentario de `ORDEN_INICIAL` en
- * `hooks/useFilteredCompanies.ts`), así que la escala sube hasta 2.000 en vez
- * de cortar en 100 y saltar directa a "sin máximo".
- */
-export const PASOS_TAMANO_MAXIMO = [
-  0, 1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 30, 50, 100, 150, 200, 300, 500, 1000, 2000,
-];
-
-export function cumpleUmbral(empresa: Empresa, umbral: number): boolean {
-  const { estado, flota } = empresa;
-  return estado === 'activa' && flota.vigente && flota.valor !== null && flota.valor >= umbral;
+/** Rango de vehículos, ambos extremos incluidos. */
+export interface FiltroVehiculos {
+  min: number;
+  /** `null` = sin techo. */
+  max: number | null;
 }
 
 /**
- * Filtro por la fuente del dato de tamaño: todo, solo lo verificado en el REAT
- * (vehículos de verdad) o solo lo estimado por plantilla de SABI. Existe porque
- * `flota.valor` mezcla unidades —vehículos y empleados— y quien necesita
- * comparar flotas reales tiene que poder quedarse solo con el REAT.
+ * De arranque no se filtra nada: toda empresa del registro tiene al menos un
+ * vehículo. Quien busque "a partir de 5 camiones" sube el mínimo.
  */
-export type FiltroFlota = 'todas' | 'verificada' | 'estimada';
+export const FILTRO_INICIAL: FiltroVehiculos = { min: 1, max: null };
 
-export const FLOTA_INICIAL: FiltroFlota = 'todas';
+/**
+ * Paradas no lineales de los deslizables. La mitad de las empresas tiene 5
+ * vehículos o menos y solo el 1% pasa de 97, así que un recorrido lineal
+ * gastaría casi todo el deslizable en un tramo sin nadie: las paradas se
+ * aprietan donde está la masa de datos y se abren en la cola (hasta los 2.803
+ * de la flota más grande del registro).
+ */
+export const PASOS_VEHICULOS = [1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 30, 50, 100, 200, 500, 1000];
 
-export function cumpleFlota(empresa: Empresa, filtro: FiltroFlota): boolean {
-  return filtro === 'todas' || empresa.flota.tipo === filtro;
+export function cumpleFiltro(empresa: Empresa, filtro: FiltroVehiculos): boolean {
+  return (
+    empresa.vehiculos >= filtro.min && (filtro.max === null || empresa.vehiculos <= filtro.max)
+  );
+}
+
+export function filtroActivo(filtro: FiltroVehiculos): boolean {
+  return filtro.min > FILTRO_INICIAL.min || filtro.max !== null;
+}
+
+/** "≥ 5 veh.", "5–20 veh.", "≤ 20 veh."; cadena vacía si no hay filtro puesto. */
+export function etiquetaFiltro(filtro: FiltroVehiculos): string {
+  const conMinimo = filtro.min > FILTRO_INICIAL.min;
+  if (filtro.max === null) return conMinimo ? `≥ ${filtro.min} veh.` : '';
+  if (!conMinimo) return `≤ ${filtro.max} veh.`;
+  return filtro.min === filtro.max ? `${filtro.min} veh.` : `${filtro.min}–${filtro.max} veh.`;
 }
 
 export interface Conteo {
-  /** Empresas que cumplen el umbral. Es lo que colorea la coropleta. */
+  /** Empresas dentro del rango. Es lo que colorea la coropleta. */
   cumplen: number;
-  /** Activas con tamaño vigente: numerador de la cobertura. */
-  conDato: number;
-  /**
-   * Activas del export de SABI: denominador **provisional** de la cobertura.
-   * Al integrar INE DIRCE pasa a ser el total oficial por provincia y CNAE,
-   * porque el propio export de SABI también puede estar incompleto.
-   */
-  activas: number;
-  /** Todas las filas del export, extinguidas incluidas. */
+  /** Vehículos que suman esas empresas. */
+  vehiculos: number;
+  /** Todas las empresas de la región, sin filtrar. */
   total: number;
 }
 
@@ -76,28 +64,14 @@ export interface Recuentos {
   nacional: Conteo;
 }
 
-/** Cobertura de dato en tanto por uno. `null` si no hay ninguna empresa activa. */
-export function cobertura(conteo: Conteo): number | null {
-  return conteo.activas === 0 ? null : conteo.conDato / conteo.activas;
-}
-
-const vacio = (): Conteo => ({ cumplen: 0, conDato: 0, activas: 0, total: 0 });
+const vacio = (): Conteo => ({ cumplen: 0, vehiculos: 0, total: 0 });
 
 /**
- * Un solo recorrido sobre las ~45.000 empresas. Las regiones sin ninguna
+ * Un solo recorrido sobre las ~27.000 empresas. Las regiones sin ninguna
  * empresa arrancan en 0 y no en `undefined`: la coropleta necesita distinguir
  * "cero" de "sin dato" y son estados distintos en la leyenda.
- *
- * El filtro de fuente solo toca `cumplen` (lo que colorea la coropleta y llena
- * el listado). `conDato` y `activas` se quedan como están: la cobertura mide
- * cuánto dato hay, no cuánto pasa el filtro, y no debe moverse con él.
  */
-export function contar(
-  dataset: Dataset,
-  regiones: Regiones,
-  umbral: number,
-  filtroFlota: FiltroFlota = 'todas',
-): Recuentos {
+export function contar(dataset: Dataset, regiones: Regiones, filtro: FiltroVehiculos): Recuentos {
   const provincias: Record<CodProvincia, Conteo> = {};
   const ccaa: Record<CodCCAA, Conteo> = {};
   const nacional = vacio();
@@ -106,18 +80,15 @@ export function contar(
 
   for (const empresas of Object.values(dataset.empresas)) {
     for (const empresa of empresas) {
-      const destinos = [provincias[empresa.provincia], ccaa[empresa.ccaa], nacional];
+      const cumple = cumpleFiltro(empresa, filtro);
 
-      const activa = empresa.estado === 'activa';
-      const conDato = activa && empresa.flota.vigente && empresa.flota.valor !== null;
-      const cumple = conDato && cumpleUmbral(empresa, umbral) && cumpleFlota(empresa, filtroFlota);
-
-      for (const destino of destinos) {
+      for (const destino of [provincias[empresa.provincia], ccaa[empresa.ccaa], nacional]) {
         if (!destino) continue;
         destino.total++;
-        if (activa) destino.activas++;
-        if (conDato) destino.conDato++;
-        if (cumple) destino.cumplen++;
+        if (cumple) {
+          destino.cumplen++;
+          destino.vehiculos += empresa.vehiculos;
+        }
       }
     }
   }
@@ -128,42 +99,4 @@ export function contar(
 /** Proyección `código -> nº que cumple`, que es lo único que necesita el mapa. */
 export function cumplenPorRegion(conteos: Record<string, Conteo>): Record<string, number> {
   return Object.fromEntries(Object.entries(conteos).map(([cod, c]) => [cod, c.cumplen]));
-}
-
-/**
- * Filtros del LISTADO (provincia o comunidad), no del mapa. `umbralMin` y
- * `filtroFlota` son los mismos que colorean la coropleta —se pasan tal cual,
- * sin duplicar el control—; `umbralMax` e `incluirSinDato` son exclusivos del
- * listado: ampliar lo que se ve en una lista no debería resignificar de qué
- * habla la coropleta.
- */
-export interface FiltrosListado {
-  umbralMin: number;
-  /** `null` = sin techo. */
-  umbralMax: number | null;
-  filtroFlota: FiltroFlota;
-  /**
-   * Empresas activas sin dato de tamaño vigente. Fuera de cualquier umbral —
-   * no hay valor con el que compararlas—: se incluyen entrando por esta
-   * puerta o no se incluyen en absoluto, nunca a medias.
-   */
-  incluirSinDato: boolean;
-}
-
-export const FILTROS_LISTADO_INICIALES: Pick<FiltrosListado, 'umbralMax' | 'incluirSinDato'> = {
-  umbralMax: null,
-  incluirSinDato: false,
-};
-
-export function cumpleFiltrosListado(empresa: Empresa, filtros: FiltrosListado): boolean {
-  if (empresa.estado !== 'activa') return false;
-
-  const sinDatoVigente = empresa.flota.valor === null || !empresa.flota.vigente;
-  if (sinDatoVigente) return filtros.incluirSinDato;
-
-  return (
-    cumpleUmbral(empresa, filtros.umbralMin) &&
-    (filtros.umbralMax === null || empresa.flota.valor! <= filtros.umbralMax) &&
-    cumpleFlota(empresa, filtros.filtroFlota)
-  );
 }

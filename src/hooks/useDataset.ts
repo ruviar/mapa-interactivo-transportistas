@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import type { Dataset } from '../types/company';
 
 /**
- * companies.json son ~12 MB (≈1 MB comprimido) y se sirve desde public/,
+ * companies.json son ~4,5 MB (≈0,7 MB comprimido) y se sirve desde public/,
  * así que se pide una sola vez por sesión y se reparte desde esta promesa.
  */
 let pendiente: Promise<Dataset> | null = null;

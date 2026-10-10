@@ -32,12 +32,9 @@ import { calcularCortes } from './utils/choroplethScale';
 import {
   contar,
   cumplenPorRegion,
-  FILTROS_LISTADO_INICIALES,
-  FLOTA_INICIAL,
-  UMBRAL_INICIAL,
+  FILTRO_INICIAL,
   type Conteo,
-  type FiltroFlota,
-  type FiltrosListado,
+  type FiltroVehiculos,
 } from './utils/dataGrouping';
 
 const REGIONES = regiones as Regiones;
@@ -51,9 +48,10 @@ const porTamano = (a: FilaRegion, b: FilaRegion) =>
   b.cumplen - a.cumplen || a.nombre.localeCompare(b.nombre, 'es');
 
 /**
- * Fase 5 — pulido. Lo de la Fase 4 (España › comunidad › provincia, umbral y
- * buscador) con dos formas: columna fija en escritorio y hoja inferior sobre el
- * mapa a pantalla completa en tablet y móvil.
+ * La herramienta: España › comunidad › provincia sobre el registro de
+ * autorizaciones del Ministerio, con filtro por vehículos y buscador. Dos
+ * formas: columna fija en escritorio y hoja inferior sobre el mapa a pantalla
+ * completa en tablet y móvil.
  */
 export default function App() {
   const carga = useDataset();
@@ -98,18 +96,17 @@ export default function App() {
   /** El zoom se sale del encuadre del nivel actual hacia fuera (ver `NavegacionPorZoom`). */
   const alAlejarNivel = useCallback(() => nav.atras(), [nav]);
 
-  // Fijo: ya no hay control en la interfaz para moverlo (ver `UMBRAL_INICIAL`
-  // en `utils/dataGrouping.ts`). Sigue siendo el mínimo que colorea el mapa y
-  // filtra los listados en todos los niveles.
-  const umbral = UMBRAL_INICIAL;
-
-  /** Fuente del dato de tamaño: mismo trato diferido que antes el umbral. */
-  const [fuenteFlota, setFuenteFlota] = useState<FiltroFlota>(FLOTA_INICIAL);
-  const fuenteAplicada = useDeferredValue(fuenteFlota);
+  // Rango de vehículos: un solo filtro para todo — colorea el mapa, llena los
+  // listados y mueve los contadores. Recontar 27.000 empresas y repintar 52
+  // polígonos en cada paso del deslizable atascaría el pulgar: con el valor
+  // diferido el control responde al instante y el mapa llega un fotograma
+  // después.
+  const [filtro, setFiltro] = useState<FiltroVehiculos>(FILTRO_INICIAL);
+  const filtroAplicado = useDeferredValue(filtro);
 
   const recuentos = useMemo(
-    () => (dataset ? contar(dataset, REGIONES, umbral, fuenteAplicada) : null),
-    [dataset, umbral, fuenteAplicada],
+    () => (dataset ? contar(dataset, REGIONES, filtroAplicado) : null),
+    [dataset, filtroAplicado],
   );
 
   const cumplenCCAA = useMemo(() => recuentos && cumplenPorRegion(recuentos.ccaa), [recuentos]);
@@ -135,24 +132,6 @@ export default function App() {
   // a quien acaba de pedir explícitamente el orden por tamaño.
   const [orden, setOrden] = useState<Orden>(ORDEN_INICIAL);
 
-  // ── Filtros avanzados del listado (no tocan la coropleta) ──────────────────
-  // Máximo de tamaño e "incluir sin dato" son exclusivos del listado: amplían
-  // o acotan lo que se ve en una lista sin resignificar de qué habla el mapa.
-  const [umbralMax, setUmbralMax] = useState<number | null>(FILTROS_LISTADO_INICIALES.umbralMax);
-  const umbralMaxAplicado = useDeferredValue(umbralMax);
-  const [incluirSinDato, setIncluirSinDato] = useState(FILTROS_LISTADO_INICIALES.incluirSinDato);
-  const incluirSinDatoAplicado = useDeferredValue(incluirSinDato);
-
-  const filtrosListado: FiltrosListado = useMemo(
-    () => ({
-      umbralMin: umbral,
-      umbralMax: umbralMaxAplicado,
-      filtroFlota: fuenteAplicada,
-      incluirSinDato: incluirSinDatoAplicado,
-    }),
-    [umbral, umbralMaxAplicado, fuenteAplicada, incluirSinDatoAplicado],
-  );
-
   // ── Ámbito del listado: una provincia, o una comunidad entera ──────────────
   // Ver una comunidad no exige bajar a una provincia: se listan sus empresas
   // desde el primer clic, y el desglose por provincia (`facetsProvincia`, más
@@ -170,11 +149,11 @@ export default function App() {
     [vista, provinciasDeCcaaActual],
   );
 
-  const empresasProvincia = useFilteredCompanies(dataset, ambitoProvincia, filtrosListado, orden);
+  const empresasProvincia = useFilteredCompanies(dataset, ambitoProvincia, filtroAplicado, orden);
   // Sin acotar por provincia: es la base de los chips de desglose (sus
   // recuentos no deben moverse porque el usuario haya elegido un chip) y,
   // cuando no hay ninguno elegido, es directamente lo que se enseña.
-  const empresasCCAA = useFilteredCompanies(dataset, ambitoCCAA, filtrosListado, orden);
+  const empresasCCAA = useFilteredCompanies(dataset, ambitoCCAA, filtroAplicado, orden);
 
   /** Provincia elegida en los chips de desglose de una comunidad. `null` = todas. */
   const [provinciaFacet, setProvinciaFacet] = useState<CodProvincia | null>(null);
@@ -204,7 +183,7 @@ export default function App() {
 
   // ── Búsqueda global (toda España) ─────────────────────────────────────────
   // La consulta vive aquí y no en el panel: sobrevive a la navegación entre
-  // niveles, igual que el orden. El texto va diferido como el umbral.
+  // niveles, igual que el orden. El texto va diferido como el filtro.
   const [consultaGlobal, setConsultaGlobal] = useState('');
   const consultaGlobalAplicada = useDeferredValue(consultaGlobal);
   const buscandoGlobal = terminosDe(consultaGlobalAplicada).length > 0;
@@ -292,12 +271,7 @@ export default function App() {
       // Alto del asomo, publicado para que el mapa sepa dónde acabar.
       style={{ '--asomo': `${tapado}px` } as CSSProperties}
     >
-      <Header
-        total={recuentos?.nacional.cumplen ?? null}
-        fuente={fuenteFlota}
-        hayVerificadas={(dataset?.meta.resumen.verificada ?? 0) > 0}
-        onCambiarFuente={setFuenteFlota}
-      />
+      <Header total={recuentos?.nacional.cumplen ?? null} />
 
       <main className="flex min-h-0 flex-1 flex-col lg:flex-row">
         {/* Columna del mapa: el mapa arriba y su leyenda como pie propio. El
@@ -354,9 +328,7 @@ export default function App() {
           segmentos={segmentos}
           titulo={titulo}
           conteo={ambito}
-          umbral={umbral}
-          umbralMax={umbralMaxAplicado}
-          incluirSinDato={incluirSinDatoAplicado}
+          filtro={filtro}
           regiones={listaRegiones}
           empresas={empresas}
           orden={orden}
@@ -378,8 +350,7 @@ export default function App() {
           onCambiarConsultaGlobal={setConsultaGlobal}
           onElegirResultado={alElegirResultado}
           onCambiarOrden={setOrden}
-          onCambiarUmbralMax={setUmbralMax}
-          onCambiarIncluirSinDato={setIncluirSinDato}
+          onCambiarFiltro={setFiltro}
           onCambiarFacet={setProvinciaFacet}
           onSeleccionarRegion={alSeleccionarCCAA}
         />

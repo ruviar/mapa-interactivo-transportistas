@@ -1,4 +1,3 @@
-import { CoverageChip } from '../layout/CoverageChip';
 // Extensión explícita: en un filesystem que no distingue mayúsculas
 // (Windows), './Odometro' colisiona con './odometro.ts' y resuelve al
 // módulo equivocado.
@@ -9,7 +8,8 @@ import type { Orden } from '../../hooks/useFilteredCompanies';
 import type { Vista } from '../../hooks/useMapNavigation';
 import type { Empresa } from '../../types/company';
 import type { CortesCoropleta } from '../../utils/choroplethScale';
-import type { Conteo } from '../../utils/dataGrouping';
+import { etiquetaFiltro, type Conteo, type FiltroVehiculos } from '../../utils/dataGrouping';
+import { CITA_CORTA } from '../../utils/fuente';
 import { Breadcrumb, type Segmento } from './Breadcrumb';
 import { CompanyPanel } from './CompanyPanel';
 import { GlobalSearchResults } from './GlobalSearchResults';
@@ -20,16 +20,17 @@ import { SheetHandle } from './SheetHandle';
 /** El asa lo referencia con `aria-controls`. */
 const ID_PANEL = 'panel-consulta';
 
+const nf = new Intl.NumberFormat('es-ES');
+
 interface Props {
   vista: Vista;
   segmentos: Segmento[];
   /** Nombre de la región activa, o "España" en la vista nacional. */
   titulo: string;
-  /** Recuento de la región activa: cumplen el filtro, con dato, activas y total. */
+  /** Recuento de la región activa: empresas dentro del filtro y sus vehículos. */
   conteo: Conteo | null;
-  umbral: number;
-  umbralMax: number | null;
-  incluirSinDato: boolean;
+  /** Rango de vehículos vigente: global, colorea el mapa y llena los listados. */
+  filtro: FiltroVehiculos;
   /** Comunidades navegables a nivel nacional. */
   regiones: FilaRegion[];
   empresas: Empresa[];
@@ -52,8 +53,7 @@ interface Props {
   onCambiarConsultaGlobal: (consulta: string) => void;
   onElegirResultado: (empresa: Empresa) => void;
   onCambiarOrden: (orden: Orden) => void;
-  onCambiarUmbralMax: (umbralMax: number | null) => void;
-  onCambiarIncluirSinDato: (incluir: boolean) => void;
+  onCambiarFiltro: (filtro: FiltroVehiculos) => void;
   onCambiarFacet: (cod: string | null) => void;
   /** Solo se usa a nivel nacional: elegir una comunidad de la lista. */
   onSeleccionarRegion: (cod: string) => void;
@@ -77,9 +77,7 @@ export function Sidebar({
   segmentos,
   titulo,
   conteo,
-  umbral,
-  umbralMax,
-  incluirSinDato,
+  filtro,
   regiones,
   empresas,
   orden,
@@ -97,8 +95,7 @@ export function Sidebar({
   onCambiarConsultaGlobal,
   onElegirResultado,
   onCambiarOrden,
-  onCambiarUmbralMax,
-  onCambiarIncluirSinDato,
+  onCambiarFiltro,
   onCambiarFacet,
   onSeleccionarRegion,
 }: Props) {
@@ -146,7 +143,7 @@ export function Sidebar({
             >
               <Odometro valor={conteo === null ? null : conteo.cumplen} mecanica="columna" />
               <span className="ml-1.5 font-sans text-caption">
-                {umbral === 0 ? 'con dato' : `≥ ${umbral} empl.`}
+                {etiquetaFiltro(filtro) || 'empresas'}
               </span>
             </p>
           </div>
@@ -170,25 +167,31 @@ export function Sidebar({
       {/* `inert` mientras no se ve: si no, el tabulador se va a un listado que
           está fuera de pantalla y no hay forma de saber dónde ha ido el foco. */}
       <div inert={recogida} className="flex min-h-0 flex-1 flex-col">
-        <div className="shrink-0 border-b border-ink/10 px-4 pb-3">
-          <CoverageChip conteo={conteo} ambito={titulo} />
+        {/* El otro total del ámbito: los vehículos que suman las empresas del
+            filtro. Es el dato que el registro aporta y la cifra de empresas no
+            cuenta — 80 empresas pueden ser 200 camiones o 2.000. */}
+        <div className="shrink-0 border-b border-ink/10 px-4 pb-3 text-caption text-asfalto">
+          <p className="flex items-baseline justify-between gap-3">
+            <span className="uppercase tracking-[0.08em]">Vehículos autorizados</span>
+            <span className="font-mono text-body-sm font-medium tabular-nums text-ink">
+              {conteo === null ? '—' : nf.format(conteo.vehiculos)}
+            </span>
+          </p>
+          {/* Cita obligada de la fuente y de la fecha de los datos (Ley 37/2007). */}
+          <p className="mt-1 text-[0.6875rem] leading-snug text-asfalto/80">{CITA_CORTA}</p>
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {vista.nivel === 'provincia' || vista.nivel === 'ccaa' ? (
-            // `key`: al cambiar de ámbito se remonta y el buscador/filtros se
-            // vacían. Al cambiar solo el facet de provincia dentro de la misma
+            // `key`: al cambiar de ámbito se remonta y el buscador se vacía. Al cambiar solo el facet de provincia dentro de la misma
             // comunidad NO se remonta (misma key): así no se pierde lo tecleado.
             <CompanyPanel
               key={vista.nivel === 'provincia' ? `p:${vista.provincia}` : `c:${vista.ccaa}`}
               empresas={empresas}
-              umbral={umbral}
-              umbralMax={umbralMax}
-              incluirSinDato={incluirSinDato}
+              filtro={filtro}
               orden={orden}
               onCambiarOrden={onCambiarOrden}
-              onCambiarUmbralMax={onCambiarUmbralMax}
-              onCambiarIncluirSinDato={onCambiarIncluirSinDato}
+              onCambiarFiltro={onCambiarFiltro}
               empresaElegida={empresaElegida}
               facetsProvincia={vista.nivel === 'ccaa' ? facetsProvincia : undefined}
               provinciaFacet={vista.nivel === 'ccaa' ? provinciaFacet : undefined}
@@ -200,7 +203,7 @@ export function Sidebar({
                 consulta={consultaGlobal}
                 onCambiar={onCambiarConsultaGlobal}
                 placeholder="Buscar empresa en toda España…"
-                etiqueta="Buscar empresa en toda España por nombre, NIF, localidad o provincia"
+                etiqueta="Buscar empresa en toda España por razón social, número de autorización, localidad o provincia"
               />
 
               {buscandoGlobal ? (
@@ -208,6 +211,7 @@ export function Sidebar({
                   resultados={resultadosGlobales}
                   nombresProvincia={nombresProvincia}
                   consulta={consultaGlobal}
+                  hayFiltro={etiquetaFiltro(filtro) !== ''}
                   onElegir={onElegirResultado}
                 />
               ) : (

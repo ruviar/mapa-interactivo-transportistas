@@ -34,7 +34,7 @@ export function MapLegend({ cortes, ambito, activa, compacta = false }: Props) {
         {FONDO_PASO.map((fondo, i) => (
           <li key={fondo} className={`flex flex-col gap-1 ${compacta ? 'min-w-0 flex-1' : ''}`}>
             <span
-              className={`block h-2.5 border-r border-base ${compacta ? 'w-full' : 'w-12'} ${
+              className={`block h-2.5 border-r border-base ${compacta ? 'w-full' : 'w-16'} ${
                 activa ? fondo : 'bg-asfalto/25'
               }`}
             />

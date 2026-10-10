@@ -63,7 +63,7 @@ cualquier brief nuevo:
   variable — 112% en la herramienta (`rotulo`), 125% en la landing
   (`rotulo-landing`).
 - **Cuerpo:** Inter.
-- **Datos (cifras, NIF, umbral, contadores):** IBM Plex Mono. Todo lo que sea
+- **Datos (cifras, autorizaciones, fechas, contadores):** IBM Plex Mono. Todo lo que sea
   un dato "de tabla" o un contador va en monoespaciada — separa visualmente
   dato de prosa.
 
@@ -113,8 +113,8 @@ sección: ver `AsiFuncionaElMapa.tsx`, su reemplazo por capturas.)
 - **GSAP** (`animation/gsap.ts`, registro único de plugins — todos gratuitos
   desde la compra de Webflow) entra donde Motion no llega bien:
   - `SplitText`: entrada por palabras del titular del hero. Único uso del sitio.
-  - `Draggable`: el slider de umbral custom (`EmployeeThresholdSlider.tsx`).
-  - `Flip`: reordena `RegionList.tsx` cuando el umbral cambia el ranking.
+  - `Draggable`: disponible; hoy sin uso (los deslizables del filtro son `<input type="range">` nativos).
+  - `Flip`: reordena `RegionList.tsx` cuando el filtro de vehículos cambia el ranking.
     No se usa en `CompanyList.tsx` — esa lista está virtualizada
     (`react-window`) y puede traer miles de filas; Flip necesita elementos
     DOM estables para medir, y con filas recicladas no hay "antes" que

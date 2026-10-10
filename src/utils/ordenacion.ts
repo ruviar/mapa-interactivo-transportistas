@@ -3,14 +3,14 @@
  * poder probarse con `node --test` igual que `busqueda.ts` o `dataGrouping.ts`.
  *
  * Un orden es una lista de claves (criterio + sentido): se compara por la
- * primera y, a igualdad, por las siguientes. Así "Localidad A→Z, luego Tamaño
- * mayor→menor" agrupa por pueblo con las grandes arriba de cada grupo — la
- * pregunta que un solo criterio no podía responder.
+ * primera y, a igualdad, por las siguientes. Así "Localidad A→Z, luego
+ * Vehículos mayor→menor" agrupa por pueblo con las flotas grandes arriba de
+ * cada grupo — la pregunta que un solo criterio no podía responder.
  */
 
 import type { Empresa } from '../types/company';
 
-export type CriterioOrden = 'nombre' | 'localidad' | 'tamano';
+export type CriterioOrden = 'nombre' | 'localidad' | 'vehiculos' | 'fecha';
 export type SentidoOrden = 'asc' | 'desc';
 
 export interface ClaveOrden {
@@ -21,22 +21,12 @@ export interface ClaveOrden {
 /** Primera clave manda; las siguientes solo desempatan. */
 export type Orden = readonly ClaveOrden[];
 
-/**
- * Sentido con el que arranca cada criterio al elegirse: el que responde a la
- * pregunta habitual — alfabético de la A, tamaño del más grande.
- */
-export const SENTIDO_POR_DEFECTO: Record<CriterioOrden, SentidoOrden> = {
-  nombre: 'asc',
-  localidad: 'asc',
-  tamano: 'desc',
-};
-
 const porNombre = (a: Empresa, b: Empresa) => a.nombre.localeCompare(b.nombre, 'es');
 
 /**
- * Los huecos van al final en ambos sentidos: una empresa sin localidad o sin
- * dato de tamaño no es "menor que Almería" ni "más pequeña que 3", es un
- * hueco — invertir el sentido no debería subirla a lo alto del listado.
+ * Los huecos van al final en ambos sentidos: una empresa sin localidad no es
+ * "menor que Almería", es un hueco — invertir el sentido no debería subirla a
+ * lo alto del listado.
  */
 function compararClave(a: Empresa, b: Empresa, { criterio, sentido }: ClaveOrden): number {
   const signo = sentido === 'asc' ? 1 : -1;
@@ -50,14 +40,11 @@ function compararClave(a: Empresa, b: Empresa, { criterio, sentido }: ClaveOrden
       if (!b.localidad) return -1;
       return signo * a.localidad.localeCompare(b.localidad, 'es');
     }
-    case 'tamano': {
-      const va = a.flota.valor;
-      const vb = b.flota.valor;
-      if (va === null && vb === null) return 0;
-      if (va === null) return 1;
-      if (vb === null) return -1;
-      return signo * (va - vb);
-    }
+    case 'vehiculos':
+      return signo * (a.vehiculos - b.vehiculos);
+    case 'fecha':
+      // "AAAA-MM-DD" se ordena bien como texto.
+      return signo * (a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : 0);
   }
 }
 

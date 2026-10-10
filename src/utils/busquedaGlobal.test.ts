@@ -1,27 +1,26 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import type { Dataset, Empresa, EstadoEmpresa } from '../types/company.ts';
+import type { Dataset, Empresa } from '../types/company.ts';
+import { filtrarPorTexto } from './busqueda.ts';
 import { buscarEnIndice, crearIndiceGlobal } from './busquedaGlobal.ts';
 
 function empresa(
   nombre: string,
-  nif: string,
+  autorizacion: string,
   localidad: string | null,
   provincia: string,
-  estado: EstadoEmpresa = 'activa',
+  cp: string | null = null,
 ): Empresa {
   return {
     nombre,
-    nif,
     localidad,
-    cp: null,
+    cp,
     provincia,
     ccaa: '02',
-    cnae: '4941',
-    estado,
-    empleados: null,
-    flota: { tipo: 'estimada', valor: 6, fuente: 'empleados_SABI', fecha_dato: '2024-12', vigente: true },
+    autorizacion,
+    fecha: '2024-12-01',
+    vehiculos: 6,
   };
 }
 
@@ -33,18 +32,15 @@ const NOMBRES = new Map([
 const DATASET = {
   meta: {} as Dataset['meta'],
   empresas: {
-    '22': [
-      empresa('FRIGORÍFICOS DEL CINCA SL', 'B22000001', 'Monzón', '22'),
-      empresa('EXTINGUIDA SA', 'A22000002', 'Jaca', '22', 'extinguida'),
-    ],
+    '22': [empresa('FRIGORÍFICOS DEL CINCA SL', '11222001', 'MONZÓN', '22', '22400')],
     '50': [
-      empresa('TRANS SESÉ SL', 'B50000001', 'Zaragoza', '50'),
-      empresa('ACARREOS EBRO SL', 'B50000002', 'Utebo', '50'),
+      empresa('TRANS SESÉ SL', '11500001', 'ZARAGOZA', '50', '50014'),
+      empresa('ACARREOS EBRO SL', '11500002', 'UTEBO', '50', '50180'),
     ],
   },
 } as Dataset;
 
-test('el índice solo trae activas y viene ordenado por nombre', () => {
+test('el índice trae todo el registro, ordenado por nombre', () => {
   const indice = crearIndiceGlobal(DATASET, NOMBRES);
   assert.deepEqual(
     indice.empresas.map((e) => e.nombre),
@@ -53,26 +49,21 @@ test('el índice solo trae activas y viene ordenado por nombre', () => {
   assert.equal(indice.pajares.length, 3);
 });
 
-test('busca sin tildes por nombre, NIF, localidad y nombre de provincia', () => {
+test('busca sin tildes por nombre, autorización, localidad, CP y provincia', () => {
   const indice = crearIndiceGlobal(DATASET, NOMBRES);
+  const nombres = (consulta: string) => buscarEnIndice(indice, consulta).map((e) => e.nombre);
 
-  const porNombre = buscarEnIndice(indice, 'sese');
-  assert.deepEqual(porNombre.map((e) => e.nombre), ['TRANS SESÉ SL']);
-
-  const porNif = buscarEnIndice(indice, 'b50000002');
-  assert.deepEqual(porNif.map((e) => e.nombre), ['ACARREOS EBRO SL']);
-
-  const porLocalidad = buscarEnIndice(indice, 'monzon');
-  assert.deepEqual(porLocalidad.map((e) => e.nombre), ['FRIGORÍFICOS DEL CINCA SL']);
-
+  assert.deepEqual(nombres('sese'), ['TRANS SESÉ SL']);
+  assert.deepEqual(nombres('11500002'), ['ACARREOS EBRO SL']);
+  assert.deepEqual(nombres('monzon'), ['FRIGORÍFICOS DEL CINCA SL']);
+  assert.deepEqual(nombres('50180'), ['ACARREOS EBRO SL']);
   // "huesca" no aparece ni en el nombre ni en la localidad: solo la provincia.
-  const porProvincia = buscarEnIndice(indice, 'frigorificos huesca');
-  assert.deepEqual(porProvincia.map((e) => e.nombre), ['FRIGORÍFICOS DEL CINCA SL']);
+  assert.deepEqual(nombres('frigorificos huesca'), ['FRIGORÍFICOS DEL CINCA SL']);
 });
 
 test('todos los términos tienen que aparecer, en cualquier orden', () => {
   const indice = crearIndiceGlobal(DATASET, NOMBRES);
-  assert.equal(buscarEnIndice(indice, 'ebro utebo').length, 1);
+  assert.equal(buscarEnIndice(indice, 'utebo ebro').length, 1);
   assert.equal(buscarEnIndice(indice, 'ebro monzon').length, 0);
 });
 
@@ -80,4 +71,11 @@ test('consulta vacía o en blanco no devuelve nada', () => {
   const indice = crearIndiceGlobal(DATASET, NOMBRES);
   assert.equal(buscarEnIndice(indice, '').length, 0);
   assert.equal(buscarEnIndice(indice, '   ').length, 0);
+});
+
+test('el buscador del listado encuentra por autorización y por código postal', () => {
+  const zaragoza = DATASET.empresas['50']!;
+  assert.deepEqual(filtrarPorTexto(zaragoza, '11500001').map((e) => e.nombre), ['TRANS SESÉ SL']);
+  assert.deepEqual(filtrarPorTexto(zaragoza, '50180').map((e) => e.nombre), ['ACARREOS EBRO SL']);
+  assert.equal(filtrarPorTexto(zaragoza, '').length, 2);
 });

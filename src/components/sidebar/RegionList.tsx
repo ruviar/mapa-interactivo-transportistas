@@ -17,7 +17,7 @@ export interface FilaRegion {
  * elegida, y toda la navegación es alcanzable con el teclado sin depender de
  * poder pulsar un polígono.
  *
- * Al mover el umbral el orden cambia (más regiones cumplen, otras dejan de
+ * Al mover el filtro de vehículos el orden cambia (más regiones cumplen, otras dejan de
  * hacerlo) y las filas se reordenan con GSAP Flip en vez de saltar. Esto va
  * aquí y no en `CompanyList`: aquella es una lista virtualizada de
  * `react-window` que puede traer miles de filas, y Flip necesita elementos

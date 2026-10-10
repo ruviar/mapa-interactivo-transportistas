@@ -27,8 +27,8 @@ export function Contacto() {
               ¿Buscas algo que el mapa no resuelve?
             </h2>
             <p className="mt-4 text-body text-ink/70">
-              Si el filtro por plantilla se te queda corto, necesitas los datos en otro formato o
-              quieres hablar del umbral de flota antes de decidirte, escríbenos directamente.
+              Si el filtro por flota se te queda corto, necesitas los datos en otro formato o
+              quieres algo a medida, escríbenos directamente.
             </p>
             <div className="mt-8">
               <Accion href={`mailto:${CORREO_PLACEHOLDER}`}>Escribir un correo</Accion>

@@ -172,313 +172,313 @@
       "cod": "01",
       "nombre": "Araba/Álava",
       "ccaa": "16",
-      "total": 237
+      "total": 167
     },
     {
       "cod": "02",
       "nombre": "Albacete",
       "ccaa": "08",
-      "total": 688
+      "total": 463
     },
     {
       "cod": "03",
       "nombre": "Alicante/Alacant",
       "ccaa": "10",
-      "total": 1323
+      "total": 799
     },
     {
       "cod": "04",
       "nombre": "Almería",
       "ccaa": "01",
-      "total": 1460
+      "total": 907
     },
     {
       "cod": "05",
       "nombre": "Ávila",
       "ccaa": "07",
-      "total": 157
+      "total": 151
     },
     {
       "cod": "06",
       "nombre": "Badajoz",
       "ccaa": "11",
-      "total": 703
+      "total": 563
     },
     {
       "cod": "07",
       "nombre": "Illes Balears",
       "ccaa": "04",
-      "total": 788
+      "total": 613
     },
     {
       "cod": "08",
       "nombre": "Barcelona",
       "ccaa": "09",
-      "total": 4246
+      "total": 2159
     },
     {
       "cod": "09",
       "nombre": "Burgos",
       "ccaa": "07",
-      "total": 455
+      "total": 314
     },
     {
       "cod": "10",
       "nombre": "Cáceres",
       "ccaa": "11",
-      "total": 298
+      "total": 284
     },
     {
       "cod": "11",
       "nombre": "Cádiz",
       "ccaa": "01",
-      "total": 710
+      "total": 433
     },
     {
       "cod": "12",
       "nombre": "Castellón/Castelló",
       "ccaa": "10",
-      "total": 703
+      "total": 530
     },
     {
       "cod": "13",
       "nombre": "Ciudad Real",
       "ccaa": "08",
-      "total": 616
+      "total": 522
     },
     {
       "cod": "14",
       "nombre": "Córdoba",
       "ccaa": "01",
-      "total": 730
+      "total": 489
     },
     {
       "cod": "15",
       "nombre": "A Coruña",
       "ccaa": "12",
-      "total": 1097
+      "total": 722
     },
     {
       "cod": "16",
       "nombre": "Cuenca",
       "ccaa": "08",
-      "total": 403
+      "total": 330
     },
     {
       "cod": "17",
       "nombre": "Girona",
       "ccaa": "09",
-      "total": 814
+      "total": 603
     },
     {
       "cod": "18",
       "nombre": "Granada",
       "ccaa": "01",
-      "total": 835
+      "total": 512
     },
     {
       "cod": "19",
       "nombre": "Guadalajara",
       "ccaa": "08",
-      "total": 263
+      "total": 199
     },
     {
       "cod": "20",
       "nombre": "Gipuzkoa",
       "ccaa": "16",
-      "total": 647
+      "total": 368
     },
     {
       "cod": "21",
       "nombre": "Huelva",
       "ccaa": "01",
-      "total": 427
+      "total": 330
     },
     {
       "cod": "22",
       "nombre": "Huesca",
       "ccaa": "02",
-      "total": 302
+      "total": 272
     },
     {
       "cod": "23",
       "nombre": "Jaén",
       "ccaa": "01",
-      "total": 585
+      "total": 442
     },
     {
       "cod": "24",
       "nombre": "León",
       "ccaa": "07",
-      "total": 548
+      "total": 346
     },
     {
       "cod": "25",
       "nombre": "Lleida",
       "ccaa": "09",
-      "total": 684
+      "total": 521
     },
     {
       "cod": "26",
       "nombre": "La Rioja",
       "ccaa": "17",
-      "total": 307
+      "total": 226
     },
     {
       "cod": "27",
       "nombre": "Lugo",
       "ccaa": "12",
-      "total": 604
+      "total": 439
     },
     {
       "cod": "28",
       "nombre": "Madrid",
       "ccaa": "13",
-      "total": 4382
+      "total": 2132
     },
     {
       "cod": "29",
       "nombre": "Málaga",
       "ccaa": "01",
-      "total": 1177
+      "total": 755
     },
     {
       "cod": "30",
       "nombre": "Murcia",
       "ccaa": "14",
-      "total": 1977
+      "total": 1304
     },
     {
       "cod": "31",
       "nombre": "Navarra",
       "ccaa": "15",
-      "total": 766
+      "total": 526
     },
     {
       "cod": "32",
       "nombre": "Ourense",
       "ccaa": "12",
-      "total": 365
+      "total": 270
     },
     {
       "cod": "33",
       "nombre": "Asturias",
       "ccaa": "03",
-      "total": 920
+      "total": 534
     },
     {
       "cod": "34",
       "nombre": "Palencia",
       "ccaa": "07",
-      "total": 202
+      "total": 182
     },
     {
       "cod": "35",
       "nombre": "Las Palmas",
       "ccaa": "05",
-      "total": 556
+      "total": 27
     },
     {
       "cod": "36",
       "nombre": "Pontevedra",
       "ccaa": "12",
-      "total": 1121
+      "total": 725
     },
     {
       "cod": "37",
       "nombre": "Salamanca",
       "ccaa": "07",
-      "total": 306
+      "total": 271
     },
     {
       "cod": "38",
       "nombre": "Santa Cruz de Tenerife",
       "ccaa": "05",
-      "total": 526
+      "total": 41
     },
     {
       "cod": "39",
       "nombre": "Cantabria",
       "ccaa": "06",
-      "total": 564
+      "total": 413
     },
     {
       "cod": "40",
       "nombre": "Segovia",
       "ccaa": "07",
-      "total": 193
+      "total": 184
     },
     {
       "cod": "41",
       "nombre": "Sevilla",
       "ccaa": "01",
-      "total": 1711
+      "total": 1000
     },
     {
       "cod": "42",
       "nombre": "Soria",
       "ccaa": "07",
-      "total": 84
+      "total": 79
     },
     {
       "cod": "43",
       "nombre": "Tarragona",
       "ccaa": "09",
-      "total": 831
+      "total": 585
     },
     {
       "cod": "44",
       "nombre": "Teruel",
       "ccaa": "02",
-      "total": 214
+      "total": 197
     },
     {
       "cod": "45",
       "nombre": "Toledo",
       "ccaa": "08",
-      "total": 802
+      "total": 735
     },
     {
       "cod": "46",
       "nombre": "Valencia/València",
       "ccaa": "10",
-      "total": 2619
+      "total": 1449
     },
     {
       "cod": "47",
       "nombre": "Valladolid",
       "ccaa": "07",
-      "total": 512
+      "total": 368
     },
     {
       "cod": "48",
       "nombre": "Bizkaia",
       "ccaa": "16",
-      "total": 989
+      "total": 497
     },
     {
       "cod": "49",
       "nombre": "Zamora",
       "ccaa": "07",
-      "total": 222
+      "total": 183
     },
     {
       "cod": "50",
       "nombre": "Zaragoza",
       "ccaa": "02",
-      "total": 1092
+      "total": 637
     },
     {
       "cod": "51",
       "nombre": "Ceuta",
       "ccaa": "18",
-      "total": 24
+      "total": 20
     },
     {
       "cod": "52",
       "nombre": "Melilla",
       "ccaa": "19",
-      "total": 9
+      "total": 13
     }
   ]
 }

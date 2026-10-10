@@ -14,13 +14,14 @@ import { Accion } from '../piezas/Accion';
 import { ImagenODefecto } from '../piezas/ImagenODefecto';
 import { NUDO_RELATIVO, RedDeRutas } from '../piezas/RedDeRutas';
 import { Revelar } from '../piezas/Revelar';
+import { FUENTE } from '../../utils/fuente';
 
-/** Cifras contables van con `valor` (rueda en Odometro); códigos, con `texto` fijo. */
+/** La ficha del registro: sus totales salen de `fuente.json`, no se escriben a mano. */
 const FICHA = [
-  { valor: 17, etiqueta: 'comunidades' },
   { valor: 52, etiqueta: 'provincias' },
-  { texto: '4941 · 4939', etiqueta: 'CNAE de carretera' },
-] as const;
+  { valor: FUENTE.empresas, etiqueta: 'empresas' },
+  { valor: FUENTE.vehiculos, etiqueta: 'vehículos' },
+];
 
 /**
  * El cielo del hero. El navy más oscuro aguanta hasta bien abajo y el ámbar
@@ -214,8 +215,8 @@ export function Hero() {
 
           <Revelar modo="entrada" retardo={0.2}>
             <p className="mt-[clamp(1rem,2.6vh,1.5rem)] text-body text-base/80 sm:text-label-lg">
-              Deja de cruzar registros mercantiles a mano. Filtra las empresas de transporte de
-              mercancías por carretera de España por comunidad, provincia y tamaño de plantilla, y
+              Deja de cruzar registros a mano. Filtra las empresas de transporte de mercancías
+              por carretera de España por comunidad, provincia y tamaño de flota, y
               ten el listado en pantalla desde el primer clic — sin crear cuenta ni esperas.
             </p>
           </Revelar>
@@ -245,14 +246,10 @@ export function Hero() {
               {FICHA.map((item) => (
                 <div key={item.etiqueta}>
                   <dt className="font-mono text-label-lg tabular-nums text-atencion">
-                    {'valor' in item ? (
-                      // `mecanica="columna"`: la mecánica "rueda" tiene un bug de
-                      // render preexistente en columnas de decenas o más (ya
-                      // reproducible en el banco de Fase 6, ajeno a este cambio).
-                      <Odometro valor={fichaEnVista ? item.valor : 0} mecanica="columna" />
-                    ) : (
-                      item.texto
-                    )}
+                    {/* `mecanica="columna"`: la mecánica "rueda" tiene un bug de
+                        render preexistente en columnas de decenas o más (ya
+                        reproducible en el banco de Fase 6, ajeno a este cambio). */}
+                    <Odometro valor={fichaEnVista ? item.valor : 0} mecanica="columna" />
                   </dt>
                   <dd className="mt-1 text-caption uppercase tracking-[0.14em] text-base/60">
                     {item.etiqueta}

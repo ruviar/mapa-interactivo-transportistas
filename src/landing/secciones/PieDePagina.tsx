@@ -1,9 +1,10 @@
 import { useIrAVista } from '../../Raiz';
+import { AVISO_INDEPENDENCIA, CITA_COMPLETA } from '../../utils/fuente';
 
 /**
  * Pie de la landing. No confundir con `components/layout/Footer.tsx`: aquel
- * es el pie de escritorio de la herramienta (leyenda de la coropleta y nota
- * metodológica, dentro de `<App/>`); este es el cierre de la página completa.
+ * es el pie de escritorio de la herramienta (la leyenda de la coropleta,
+ * dentro de `<App/>`); este es el cierre de la página completa.
  *
  * Va en `--color-navy-950` a propósito: es el mismo navy más oscuro con el
  * que abre el hero, así que la página cierra en el mismo tono con el que
@@ -19,8 +20,7 @@ export function PieDePagina() {
           <p className="rotulo-landing text-label-lg text-base">Transportistas de España</p>
           <p className="mt-2 max-w-md text-body-sm">
             Mapa de empresas de transporte de mercancías por carretera, por comunidad autónoma y
-            provincia. Datos de SABI (CNAE 4941 · 4939); el nº de empleados es un proxy del
-            tamaño de flota, no una cifra de camiones.
+            provincia, con los vehículos de cada autorización. {CITA_COMPLETA}
           </p>
         </div>
 
@@ -42,7 +42,7 @@ export function PieDePagina() {
       </div>
 
       <p className="mx-auto mt-8 max-w-6xl border-t border-base/15 pt-4 font-mono text-caption uppercase tracking-[0.14em] text-base/40">
-        Sitio de consulta, no un registro oficial de transportistas.
+        {AVISO_INDEPENDENCIA}
       </p>
     </footer>
   );

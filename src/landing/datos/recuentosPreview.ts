@@ -1,29 +1,29 @@
 /**
- * Recuentos por comunidad con el umbral inicial (≥4 empleados), congelados en
+ * Empresas del registro por comunidad (sin filtro de vehículos), congeladas en
  * build para el preview de la landing: dan a la coropleta sus colores reales
- * sin arrastrar los 11 MB de `companies.json`. Son decorativos —van detrás de
+ * sin arrastrar los 4,5 MB de `companies.json`. Son decorativos —van detrás de
  * un blur— pero no pueden mentir: `recuentosPreview.test.ts` los coteja contra
- * el dataset real y falla si `npm run data` los deja desfasados.
+ * el dataset real y falla si `npm run data` los deja desfasados, enseñando en
+ * el propio fallo los valores que hay que pegar aquí.
  */
 export const RECUENTOS_PREVIEW_CCAA: Record<string, number> = {
-  '01': 288,
-  '02': 80,
-  '03': 35,
-  '04': 19,
-  '05': 30,
-  '06': 26,
-  '07': 106,
-  '08': 89,
-  '09': 303,
-  '10': 250,
-  '11': 33,
-  '12': 100,
-  '13': 197,
-  '14': 96,
-  '15': 45,
-  '16': 98,
-  '17': 18,
+  '01': 4868,
+  '02': 1106,
+  '03': 534,
+  '04': 613,
+  '05': 68,
+  '06': 413,
+  '07': 2078,
+  '08': 2249,
+  '09': 3868,
+  '10': 2778,
+  '11': 847,
+  '12': 2156,
+  '13': 2132,
+  '14': 1304,
+  '15': 526,
+  '16': 1032,
+  '17': 226,
+  '18': 20,
+  '19': 13,
 };
-
-/** El umbral con el que se congelaron: el inicial de la herramienta. */
-export const UMBRAL_PREVIEW = 4;

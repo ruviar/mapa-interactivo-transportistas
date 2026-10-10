@@ -18,10 +18,16 @@ const OPCIONES_ALFABETICO: { valor: string; etiqueta: string }[] = [
   { valor: 'localidad:desc', etiqueta: 'Localidad (Z → A)' },
 ];
 
-const OPCIONES_TAMANO: { valor: string; etiqueta: string }[] = [
+const OPCIONES_VEHICULOS: { valor: string; etiqueta: string }[] = [
   { valor: '', etiqueta: '—' },
-  { valor: 'tamano:desc', etiqueta: 'Mayor → menor' },
-  { valor: 'tamano:asc', etiqueta: 'Menor → mayor' },
+  { valor: 'vehiculos:desc', etiqueta: 'Mayor → menor' },
+  { valor: 'vehiculos:asc', etiqueta: 'Menor → mayor' },
+];
+
+const OPCIONES_FECHA: { valor: string; etiqueta: string }[] = [
+  { valor: '', etiqueta: '—' },
+  { valor: 'fecha:desc', etiqueta: 'Más recientes' },
+  { valor: 'fecha:asc', etiqueta: 'Más antiguas' },
 ];
 
 function aClave(valor: string): ClaveOrden | null {
@@ -34,22 +40,25 @@ const deClave = (clave: ClaveOrden | null) =>
   clave ? `${clave.criterio}:${clave.sentido}` : '';
 
 /**
- * Dos mandos de orden, uno por familia: el alfabético (empresa o localidad) y
- * el de tamaño. Se combinan solos: el alfabético manda y el tamaño desempata
- * dentro de cada grupo — "Localidad A→Z" + "Mayor→menor" pone cada pueblo en
- * orden con sus grandes arriba. Con el alfabético en "—", el tamaño manda él
- * solo. Y con los dos en "—", el listado cae al alfabético por nombre (el
- * comparador lo trae de serie como desempate final).
+ * Tres mandos de orden, uno por familia: el alfabético (empresa o localidad),
+ * el de vehículos y el de fecha de la autorización. Se combinan solos, en ese
+ * orden de mando: "Localidad A→Z" + "Mayor→menor" pone cada pueblo en orden
+ * con sus flotas grandes arriba. Con el alfabético en "—" mandan los
+ * vehículos, y la fecha desempata. Con los tres en "—", el listado cae al
+ * alfabético por nombre (el comparador lo trae de serie como desempate final).
  */
 export function CompanyListHeader({ orden, onCambiarOrden }: Props) {
   const idAlfabetico = useId();
-  const idTamano = useId();
+  const idVehiculos = useId();
+  const idFecha = useId();
 
-  const alfabetico = orden.find((c) => c.criterio !== 'tamano') ?? null;
-  const tamano = orden.find((c) => c.criterio === 'tamano') ?? null;
+  const alfabetico =
+    orden.find((c) => c.criterio === 'nombre' || c.criterio === 'localidad') ?? null;
+  const vehiculos = orden.find((c) => c.criterio === 'vehiculos') ?? null;
+  const fecha = orden.find((c) => c.criterio === 'fecha') ?? null;
 
-  const emitir = (alf: ClaveOrden | null, tam: ClaveOrden | null) =>
-    onCambiarOrden([alf, tam].filter((c): c is ClaveOrden => c !== null));
+  const emitir = (alf: ClaveOrden | null, veh: ClaveOrden | null, fec: ClaveOrden | null) =>
+    onCambiarOrden([alf, veh, fec].filter((c): c is ClaveOrden => c !== null));
 
   return (
     <div className="flex flex-col gap-2">
@@ -58,15 +67,23 @@ export function CompanyListHeader({ orden, onCambiarOrden }: Props) {
         etiqueta="Alfabético"
         valor={deClave(alfabetico)}
         opciones={OPCIONES_ALFABETICO}
-        onCambiar={(v) => emitir(aClave(v), tamano)}
+        onCambiar={(v) => emitir(aClave(v), vehiculos, fecha)}
       />
 
       <FilaOrden
-        id={idTamano}
-        etiqueta="Tamaño"
-        valor={deClave(tamano)}
-        opciones={OPCIONES_TAMANO}
-        onCambiar={(v) => emitir(alfabetico, aClave(v))}
+        id={idVehiculos}
+        etiqueta="Vehículos"
+        valor={deClave(vehiculos)}
+        opciones={OPCIONES_VEHICULOS}
+        onCambiar={(v) => emitir(alfabetico, aClave(v), fecha)}
+      />
+
+      <FilaOrden
+        id={idFecha}
+        etiqueta="Fecha"
+        valor={deClave(fecha)}
+        opciones={OPCIONES_FECHA}
+        onCambiar={(v) => emitir(alfabetico, vehiculos, aClave(v))}
       />
     </div>
   );

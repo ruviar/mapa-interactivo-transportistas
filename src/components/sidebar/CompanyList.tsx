@@ -1,9 +1,7 @@
 import { List, type RowComponentProps } from 'react-window';
 
 import type { Empresa } from '../../types/company';
-import { CompanyRow } from './CompanyRow';
-
-const ALTO_FILA = 56;
+import { ALTO_FILA_EMPRESA, CompanyRow } from './CompanyRow';
 
 interface DatosFila {
   empresas: Empresa[];
@@ -21,7 +19,7 @@ export function CompanyList({
   empresas,
   mensajeVacio,
 }: DatosFila & {
-  /** Por qué no hay nada que enseñar: no es lo mismo un umbral alto que una búsqueda sin coincidencias. */
+  /** Por qué no hay nada que enseñar: no es lo mismo un filtro estrecho que una búsqueda sin coincidencias. */
   mensajeVacio: string;
 }) {
   if (empresas.length === 0) {
@@ -39,7 +37,7 @@ export function CompanyList({
       className="h-full overscroll-contain"
       rowComponent={Fila}
       rowCount={empresas.length}
-      rowHeight={ALTO_FILA}
+      rowHeight={ALTO_FILA_EMPRESA}
       rowProps={{ empresas }}
     />
   );

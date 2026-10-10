@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "data": "node scripts/process-sabi-export.js",
+    "data": "node scripts/procesar-registro-mdpe.js",
     "test": "node --test \"scripts/*.test.js\" \"src/**/*.test.ts\""
   },
   "dependencies": {

@@ -3,19 +3,14 @@ import assert from 'node:assert/strict';
 
 import { codigoProvincia, codigoCCAA, normalizar } from './lib/ine.js';
 import {
-  detectarEstado,
-  limpiarNombre,
-  parseEmpleados,
+  limpiarRazonSocial,
+  normalizarMunicipio,
+  normalizarCP,
   fechaDesdeSerial,
-  normalizarFecha,
-  esVigente,
-  construirFlota,
-  fechaCorte,
-  motivoNoMercancias,
+  parseVehiculos,
 } from './lib/transformar.js';
 
-test('las grafías de SABI cruzan con el código INE', () => {
-  // SABI escribe estas provincias sin tildes o en minúscula.
+test('las grafías habituales sin tilde cruzan con el código INE', () => {
   assert.equal(codigoProvincia('a Coruña'), '15');
   assert.equal(codigoProvincia('Jaen'), '23');
   assert.equal(codigoProvincia('Alava'), '01');
@@ -54,154 +49,87 @@ test('normalizar quita tildes y puntuación', () => {
   assert.equal(normalizar('  Araba/Álava '), 'araba alava');
 });
 
-test('detecta el estado marcado en la razón social', () => {
-  assert.equal(detectarEstado('TRANS SESE SL'), 'activa');
-  assert.equal(detectarEstado('TRANSPORTES OCHOA SA (EXTINGUIDA)'), 'extinguida');
-  assert.equal(detectarEstado('LOGISTICA X SL EN LIQUIDACION'), 'liquidacion');
-  assert.equal(detectarEstado('TRANSPORTES Y SA EN CONCURSO DE ACREEDORES'), 'concurso');
+test('las grafías del fichero del Ministerio cruzan con el código INE', () => {
+  // Tal como vienen en la columna PROVINCIA: mayúsculas, sin tildes, abreviadas.
+  assert.equal(codigoProvincia('I. BALEARS'), '07');
+  assert.equal(codigoProvincia('S.C.TENERIFE'), '38');
+  assert.equal(codigoProvincia('LAS PALMAS'), '35');
+  assert.equal(codigoProvincia('A CORUÑA'), '15');
+  assert.equal(codigoProvincia('ALAVA'), '01');
+  assert.equal(codigoProvincia('BIZKAIA'), '48');
+  assert.equal(codigoProvincia('GIPUZKOA'), '20');
+  assert.equal(codigoProvincia('CASTELLON'), '12');
+  assert.equal(codigoProvincia('LA RIOJA'), '26');
+  assert.equal(codigoProvincia('ASTURIAS'), '33');
+  assert.equal(codigoProvincia('CEUTA'), '51');
+  assert.equal(codigoProvincia('MELILLA'), '52');
 });
 
-test('limpia la marca de estado del nombre sin dejar residuos', () => {
-  assert.equal(limpiarNombre('TRANSPORTES OCHOA SA (EXTINGUIDA)'), 'TRANSPORTES OCHOA SA');
-  assert.equal(limpiarNombre('CENTRAL MENSAJEROS 2008 SLU (EXTINGUIDA)'), 'CENTRAL MENSAJEROS 2008 SLU');
-  assert.equal(limpiarNombre('TRANS SESE SL'), 'TRANS SESE SL');
+test('la razón social pierde el relleno, nada más', () => {
+  assert.equal(limpiarRazonSocial('  JUAN MANUEL BAILEN ANGUITA, SL'), 'JUAN MANUEL BAILEN ANGUITA, SL');
+  assert.equal(limpiarRazonSocial(' TRANSPORTES Y DESGUACES FAUSTO, SL '), 'TRANSPORTES Y DESGUACES FAUSTO, SL');
+  assert.equal(limpiarRazonSocial('DELGO  OPERADOR SL'), 'DELGO OPERADOR SL');
+  // La puntuación es del registro y se queda: no se "normalizan" las formas societarias.
+  assert.equal(limpiarRazonSocial('100 POR 100 EXPRESS, SL.'), '100 POR 100 EXPRESS, SL.');
+  assert.equal(limpiarRazonSocial(null), '');
 });
 
-test('detecta viajeros y sanitario colados en el CNAE 4941', () => {
-  // Casos reales del export.
-  assert.equal(motivoNoMercancias('ATL AMBULANCIAS SL.'), 'ambulancia');
-  assert.equal(motivoNoMercancias('FALCK SERVICIOS SANITARIOS S.L.'), 'sanitario');
-  assert.equal(motivoNoMercancias('AUTOCARES SANGUIAO SA'), 'autocar');
-  assert.equal(motivoNoMercancias('ESTACION DE AUTOBUSES DE XATIVA SL'), 'autobus');
+test('el artículo pospuesto del municipio vuelve a su sitio', () => {
+  assert.equal(normalizarMunicipio('EJIDO (EL)'), 'EL EJIDO');
+  assert.equal(normalizarMunicipio('VALADOURO (O)'), 'O VALADOURO');
+  assert.equal(normalizarMunicipio('POBLA (SA)'), 'SA POBLA');
+  assert.equal(normalizarMunicipio('SALINES (SES)'), 'SES SALINES');
+  assert.equal(normalizarMunicipio('PALMAS DE GRAN CANARIA (LAS)'), 'LAS PALMAS DE GRAN CANARIA');
+  // El apóstrofo va pegado al nombre.
+  assert.equal(normalizarMunicipio("ALCORA (L')"), "L'ALCORA");
 });
 
-test('la coincidencia ignora tildes y va por palabra completa', () => {
-  assert.equal(motivoNoMercancias('AUTOBUSES OÑA SL.'), 'autobus');
-  assert.equal(motivoNoMercancias('AUTOBÚS DEL SUR SL'), 'autobus');
-  // Plural catalán.
-  assert.equal(motivoNoMercancias('RIPOLLET AUTOCARS SL'), 'autocar');
-  // Pero "autocargo" es carga, y el límite de palabra lo respeta.
-  assert.equal(motivoNoMercancias('AUTOCARGO SL'), null);
-  // "escolares" dentro de otra palabra no debe disparar.
-  assert.equal(motivoNoMercancias('TRANSPORTES PREESCOLARIZADOS SL'), null);
-});
-
-test('los transportistas de mercancías que rozan el criterio se quedan', () => {
-  // "taxi industrial" y "portes" son mercancías por carretera, no viajeros.
-  assert.equal(motivoNoMercancias('TAXIS INDUSTRIALES DE LA MONTAÑA SL'), null);
-  assert.equal(motivoNoMercancias('TAXI-FLET SERVICES SL'), null);
-  // "Urbano" es apellido, y el reparto urbano sigue siendo mercancías: la forma
-  // castellana no excluye, aunque sí lo haga la catalana "urbans".
-  assert.equal(motivoNoMercancias('TRANSPORTES PULIDO Y URBANO S.L.'), null);
-  assert.equal(motivoNoMercancias('EXPRESSO ENVIOS URBANOS SL'), null);
-  assert.equal(motivoNoMercancias('TRANSPORTES URBANOS MURCIA ALICANTE SL.'), null);
+test('los municipios sin artículo pospuesto no se tocan', () => {
+  assert.equal(normalizarMunicipio('MADRID'), 'MADRID');
+  assert.equal(normalizarMunicipio('ALICANTE/ALACANT'), 'ALICANTE/ALACANT');
+  assert.equal(normalizarMunicipio('VITORIA-GASTEIZ'), 'VITORIA-GASTEIZ');
+  // Un paréntesis que no es un artículo se queda donde está.
   assert.equal(
-    motivoNoMercancias('EMPRESA MUNICIPAL DE TRANSPORTS URBANS DE PALMA SA'),
-    'transporte_urbano',
+    normalizarMunicipio('NOAIN (VALLE DE ELORZ)/NOAIN (ELORTZIBAR)'),
+    'NOAIN (VALLE DE ELORZ)/NOAIN (ELORTZIBAR)',
   );
-  // Ninguna de estas lleva término de exclusión.
-  assert.equal(motivoNoMercancias('TRANS SESE SL'), null);
-  assert.equal(motivoNoMercancias(null), null);
+  // Una errata de origen no se adivina: "(L)" no es "(L')".
+  assert.equal(normalizarMunicipio('ALDEA (L)'), 'ALDEA (L)');
+  assert.equal(normalizarMunicipio(''), null);
+  assert.equal(normalizarMunicipio(null), null);
 });
 
-test('los marcadores financieros de SABI no son números', () => {
-  assert.equal(parseEmpleados('Financial Export limit reached'), null);
-  assert.equal(parseEmpleados('n.d.'), null);
-  assert.equal(parseEmpleados(null), null);
-  assert.equal(parseEmpleados(''), null);
-  assert.equal(parseEmpleados(703), 703);
-  assert.equal(parseEmpleados('12'), 12);
-  assert.equal(parseEmpleados('1.803'), 1803);
+test('en los bilingües el artículo se recoloca en cada mitad', () => {
+  assert.equal(normalizarMunicipio('ALQUERIAS DEL NIÑO PERDIDO/ALQUERIES (LES)'), 'ALQUERIAS DEL NIÑO PERDIDO/LES ALQUERIES');
+  assert.equal(normalizarMunicipio("ALCUDIA (L')/ALCUDIA (LA)"), "L'ALCUDIA/LA ALCUDIA");
 });
 
-test('convierte el serial de Excel a AAAA-MM', () => {
-  assert.equal(fechaDesdeSerial(45657), '2024-12'); // 31/12/2024
-  assert.equal(fechaDesdeSerial(46022), '2025-12');
-  assert.equal(fechaDesdeSerial('n.d.'), null);
+test('solo pasa un código postal de verdad; el resto queda sin CP', () => {
+  assert.equal(normalizarCP('23650'), '23650');
+  assert.equal(normalizarCP('07712'), '07712');
+  assert.equal(normalizarCP(' 46190 '), '46190');
+  assert.equal(normalizarCP('2770'), null); // truncado: no se rellena con un cero
+  assert.equal(normalizarCP('00000'), null);
+  assert.equal(normalizarCP('62000'), null); // no existe la provincia 62
+  assert.equal(normalizarCP(' '), null);
+  assert.equal(normalizarCP(null), null);
+});
+
+test('convierte el serial de Excel a AAAA-MM-DD sin depender de la zona horaria', () => {
+  assert.equal(fechaDesdeSerial(45826), '2025-06-18');
+  assert.equal(fechaDesdeSerial(39804), '2008-12-22');
+  // Una fracción de día no salta al siguiente.
+  assert.equal(fechaDesdeSerial(45826.75), '2025-06-18');
+  assert.equal(fechaDesdeSerial('2025-06-18'), null);
   assert.equal(fechaDesdeSerial(null), null);
+  assert.equal(fechaDesdeSerial(1), null);
 });
 
-test('normalizarFecha acepta año suelto y AAAA-MM', () => {
-  assert.equal(normalizarFecha('2024'), '2024-12');
-  assert.equal(normalizarFecha('2026-03'), '2026-03');
-  assert.equal(normalizarFecha('2026-3'), '2026-03');
-  assert.equal(normalizarFecha('ayer'), null);
-});
-
-test('la vigencia se mide contra la fecha de corte', () => {
-  const corte = '2023-08';
-  assert.equal(esVigente('2024-12', corte), true);
-  assert.equal(esVigente('2023-08', corte), true);
-  assert.equal(esVigente('2023-07', corte), false);
-  assert.equal(esVigente('2019-12', corte), false);
-  assert.equal(esVigente(null, corte), false);
-});
-
-test('fechaCorte resta los años pedidos', () => {
-  assert.equal(fechaCorte(new Date('2026-08-01T00:00:00Z'), 3), '2023-08');
-});
-
-const CORTE = '2023-08';
-
-test('el REAT manda sobre los empleados', () => {
-  const flota = construirFlota({
-    verificada: { nif: 'B50600527', vehiculos: 42, fecha_consulta: '2026-03' },
-    empleados: 703,
-    fechaEmpleados: '2024-12',
-    corte: CORTE,
-  });
-  assert.deepEqual(flota, {
-    tipo: 'verificada',
-    valor: 42,
-    fuente: 'REAT',
-    fecha_dato: '2026-03',
-    vigente: true,
-  });
-});
-
-test('sin REAT, los empleados son estimación', () => {
-  const flota = construirFlota({
-    verificada: undefined,
-    empleados: 12,
-    fechaEmpleados: '2024-12',
-    corte: CORTE,
-  });
-  assert.equal(flota.tipo, 'estimada');
-  assert.equal(flota.valor, 12);
-  assert.equal(flota.fuente, 'empleados_SABI');
-  assert.equal(flota.vigente, true);
-});
-
-test('una estimación de hace más de 3 años queda fuera del cómputo', () => {
-  const flota = construirFlota({
-    verificada: undefined,
-    empleados: 30,
-    fechaEmpleados: '2011-12',
-    corte: CORTE,
-  });
-  assert.equal(flota.tipo, 'estimada');
-  assert.equal(flota.valor, 30); // se conserva para la ficha
-  assert.equal(flota.vigente, false); // pero no cuenta en el filtro
-});
-
-test('sin empleados y sin REAT queda sin_dato', () => {
-  const flota = construirFlota({
-    verificada: undefined,
-    empleados: null,
-    fechaEmpleados: null,
-    corte: CORTE,
-  });
-  assert.deepEqual(flota, {
-    tipo: 'sin_dato',
-    valor: null,
-    fuente: null,
-    fecha_dato: null,
-    vigente: false,
-  });
-});
-
-test('empleados = 0 es un dato, no una ausencia', () => {
-  const flota = construirFlota({ empleados: 0, fechaEmpleados: '2024-12', corte: CORTE });
-  assert.equal(flota.tipo, 'estimada');
-  assert.equal(flota.valor, 0);
+test('los vehículos son un entero o no son nada', () => {
+  assert.equal(parseVehiculos(14), 14);
+  assert.equal(parseVehiculos(0), 0);
+  assert.equal(parseVehiculos(2.5), null);
+  assert.equal(parseVehiculos(-1), null);
+  assert.equal(parseVehiculos('14'), null);
+  assert.equal(parseVehiculos(null), null);
 });

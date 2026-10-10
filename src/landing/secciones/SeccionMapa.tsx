@@ -7,6 +7,7 @@ import { calcularCortes } from '../../utils/choroplethScale';
 import { RECUENTOS_PREVIEW_CCAA } from '../datos/recuentosPreview';
 import { Accion } from '../piezas/Accion';
 import { Revelar } from '../piezas/Revelar';
+import { FUENTE } from '../../utils/fuente';
 
 const CORTES = calcularCortes(Object.values(RECUENTOS_PREVIEW_CCAA));
 const VISTA_NACIONAL: Vista = { nivel: 'nacional' };
@@ -56,9 +57,9 @@ export function SeccionMapa() {
             El mapa, listo para consultar.
           </h2>
           <p className="mt-4 max-w-2xl text-body text-ink/70">
-            Toda España coloreada por nº de transportistas que cumplen el filtro. Entra, elige
-            comunidad y provincia, y baja hasta la empresa — con buscador sobre las ~45.000 del
-            registro.
+            Toda España coloreada por nº de empresas autorizadas. Entra, elige comunidad y
+            provincia, y baja hasta la empresa — con buscador sobre las{' '}
+            {FUENTE.empresas.toLocaleString('es-ES')} del registro y filtro por nº de vehículos.
           </p>
         </Revelar>
 
@@ -108,7 +109,7 @@ export function SeccionMapa() {
         </Revelar>
 
         <p className="mt-3 text-caption text-asfalto">
-          Vista previa con el umbral inicial (≥ 4 empleados). Dentro, el filtro es tuyo.
+          Vista previa con todas las empresas del registro. Dentro, el filtro es tuyo.
         </p>
       </div>
     </section>

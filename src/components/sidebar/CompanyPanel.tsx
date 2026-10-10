@@ -16,47 +16,48 @@ import { Pulsable } from '../../animation/Pulsable';
 import type { Orden } from '../../hooks/useFilteredCompanies';
 import type { Empresa } from '../../types/company';
 import { filtrarPorTexto, terminosDe } from '../../utils/busqueda';
-import { cumpleUmbral, PASOS_TAMANO_MAXIMO } from '../../utils/dataGrouping';
+import {
+  etiquetaFiltro,
+  filtroActivo,
+  PASOS_VEHICULOS,
+  type FiltroVehiculos,
+} from '../../utils/dataGrouping';
 import { CompanyList } from './CompanyList';
 import { CompanyListHeader } from './CompanyListHeader';
-import { CompanyRow } from './CompanyRow';
+import { ALTO_FILA_EMPRESA, CompanyRow } from './CompanyRow';
 import type { FilaRegion } from './RegionList';
 import { SearchBox } from './SearchBox';
 
 const nf = new Intl.NumberFormat('es-ES');
 
 /**
- * `PASOS_TAMANO_MAXIMO` con "sin máximo" en el índice 0: el deslizable
- * arranca a la izquierda, en reposo, y cuanto más se tira hacia la derecha
- * más generoso es el techo.
+ * Paradas del máximo: las mismas que las del mínimo, con "sin máximo" en el
+ * índice 0 — el deslizable arranca a la izquierda, en reposo, y cuanto más se
+ * tira hacia la derecha más generoso es el techo.
  */
-const PASOS_MAXIMO: readonly (number | null)[] = [null, ...PASOS_TAMANO_MAXIMO];
+const PASOS_MAXIMO: readonly (number | null)[] = [null, ...PASOS_VEHICULOS];
 
-function indiceDeMaximo(maximo: number | null): number {
-  if (maximo === null) return 0;
-  let mejor = 1;
-  for (let i = 2; i < PASOS_MAXIMO.length; i++) {
-    if (Math.abs(PASOS_MAXIMO[i]! - maximo) < Math.abs(PASOS_MAXIMO[mejor]! - maximo)) mejor = i;
+/** Índice de la parada más cercana a un valor, para colocar el pulgar. */
+function indiceMasCercano(pasos: readonly (number | null)[], valor: number, desde = 0): number {
+  let mejor = desde;
+  for (let i = desde + 1; i < pasos.length; i++) {
+    if (Math.abs(pasos[i]! - valor) < Math.abs(pasos[mejor]! - valor)) mejor = i;
   }
   return mejor;
 }
 
 interface Props {
-  /** Empresas del ámbito (provincia o comunidad) que ya cumplen los filtros, ya ordenadas. */
+  /** Empresas del ámbito (provincia o comunidad) que ya cumplen el filtro, ya ordenadas. */
   empresas: Empresa[];
-  umbral: number;
-  umbralMax: number | null;
-  incluirSinDato: boolean;
+  filtro: FiltroVehiculos;
   orden: Orden;
   onCambiarOrden: (orden: Orden) => void;
-  onCambiarUmbralMax: (umbralMax: number | null) => void;
-  onCambiarIncluirSinDato: (incluir: boolean) => void;
+  onCambiarFiltro: (filtro: FiltroVehiculos) => void;
   /**
    * Empresa elegida en la búsqueda global: va fijada encima del listado, pase
-   * o no el filtro vigente. La mayoría de las activas no tiene dato de tamaño
-   * y no aparece en el listado filtrado; esconder justo la empresa que el
-   * usuario acaba de pulsar desmentiría al buscador. Si no entra en el
-   * filtro, una nota dice por qué.
+   * o no el filtro vigente. Esconder justo la empresa que el usuario acaba de
+   * pulsar desmentiría al buscador; si no entra en el filtro, una nota dice
+   * por qué.
    */
   empresaElegida?: Empresa | null;
   /**
@@ -73,21 +74,17 @@ interface Props {
  * Listado de un ámbito (provincia o comunidad) con su buscador, filtros y
  * orden.
  *
- * La consulta y el desplegable de filtros viven aquí y no en `App` porque
- * `Sidebar` monta este componente con `key` = ámbito: al cambiar de provincia
- * o de comunidad se remonta y todo arranca limpio. Arrastrar el texto o los
- * filtros del ámbito anterior solo produce listados vacíos que no se explican
- * solos.
+ * La consulta y el desplegable viven aquí y no en `App` porque `Sidebar` monta
+ * este componente con `key` = ámbito: al cambiar de provincia o de comunidad
+ * se remonta y el buscador arranca limpio. El filtro de vehículos y el orden
+ * sí viven en `App`: son globales y sobreviven al cambio.
  */
 export function CompanyPanel({
   empresas,
-  umbral,
-  umbralMax,
-  incluirSinDato,
+  filtro,
   orden,
   onCambiarOrden,
-  onCambiarUmbralMax,
-  onCambiarIncluirSinDato,
+  onCambiarFiltro,
   empresaElegida = null,
   facetsProvincia,
   provinciaFacet = null,
@@ -105,26 +102,29 @@ export function CompanyPanel({
   const motivoFueraDelFiltro =
     empresaElegida === null || elegidaEnListado
       ? null
-      : empresaElegida.flota.valor === null || !empresaElegida.flota.vigente
-        ? 'No entra en el listado: sin dato de tamaño vigente.'
-        : !cumpleUmbral(empresaElegida, umbral)
-          ? `No entra en el listado: por debajo del umbral (≥ ${umbral} empl.).`
-          : 'No entra en el listado: fuera del filtro de fuente o del rango de tamaño.';
+      : `No entra en el listado: fuera del filtro de vehículos (${etiquetaFiltro(filtro)}).`;
 
-  // Cerrado por defecto: en la hoja móvil (82dvh) cada fila de cabecera
-  // fija le resta espacio real al listado — con el buscador, los chips, los
-  // filtros y el orden siempre abiertos a la vez, dos filas de empresas son
-  // literalmente todo lo que quedaba. Aquí solo el buscador y los chips (la
-  // vía para "ver por comunidad") se quedan siempre a la vista; el resto es
-  // un solo desplegable.
+  // Cerrado por defecto: en la hoja móvil cada fila de cabecera fija le resta
+  // espacio real al listado. Solo el buscador y los chips (la vía para "ver
+  // por comunidad") se quedan siempre a la vista; el resto es un desplegable.
   const [opcionesAbiertas, setOpcionesAbiertas] = useState(false);
-  const hayFiltroActivo = umbralMax !== null || incluirSinDato;
+  const idMin = useId();
   const idMax = useId();
-  const idSinDato = useId();
+
+  // Los dos extremos no se cruzan: mover uno arrastra al otro si hace falta.
+  const cambiarMinimo = (min: number) =>
+    onCambiarFiltro({ min, max: filtro.max !== null && filtro.max < min ? min : filtro.max });
+  const cambiarMaximo = (max: number | null) =>
+    onCambiarFiltro({ min: max !== null && max < filtro.min ? max : filtro.min, max });
 
   return (
     <>
-      <SearchBox consulta={consulta} onCambiar={setConsulta} />
+      <SearchBox
+        consulta={consulta}
+        onCambiar={setConsulta}
+        placeholder="Nombre, autorización o localidad…"
+        etiqueta="Buscar empresa por razón social, número de autorización, localidad o código postal"
+      />
 
       {facetsProvincia && facetsProvincia.length > 1 && (
         <FacetsProvincia
@@ -139,7 +139,7 @@ export function CompanyPanel({
           <p className="px-4 pt-2 text-caption uppercase tracking-[0.08em] text-asfalto">
             Resultado de la búsqueda en toda España
           </p>
-          <CompanyRow empresa={empresaElegida} style={{ height: 56 }} />
+          <CompanyRow empresa={empresaElegida} style={{ height: ALTO_FILA_EMPRESA }} />
           {motivoFueraDelFiltro && (
             <p className="px-4 pb-2 text-caption text-asfalto">{motivoFueraDelFiltro}</p>
           )}
@@ -168,7 +168,9 @@ export function CompanyPanel({
 
           <span className="flex items-center gap-1 font-medium uppercase tracking-[0.08em] text-atencion">
             Filtros y orden
-            {hayFiltroActivo && <span className="size-1.5 rounded-full bg-atencion" aria-hidden="true" />}
+            {filtroActivo(filtro) && (
+              <span className="size-1.5 rounded-full bg-atencion" aria-hidden="true" />
+            )}
             <ChevronDown
               aria-hidden="true"
               className={`size-3.5 transition-transform duration-150 ${opcionesAbiertas ? 'rotate-180' : ''}`}
@@ -180,44 +182,27 @@ export function CompanyPanel({
         <Desplegable abierto={opcionesAbiertas}>
           {/* Tarjeta tintada: los mandos se agrupan en su propia lámina de color. */}
           <div className="mx-4 mb-3 flex flex-col gap-2.5 rounded-xl bg-atencion/6 p-3">
-            {/* Sin filas no hay nada que ordenar. */}
-            {visibles.length > 0 && (
-              <CompanyListHeader orden={orden} onCambiarOrden={onCambiarOrden} />
-            )}
+            <Deslizable
+              id={idMin}
+              etiqueta="Mínimo de vehículos"
+              valor={filtro.min === 1 ? 'Sin mínimo' : nf.format(filtro.min)}
+              indice={indiceMasCercano(PASOS_VEHICULOS, filtro.min)}
+              ultimo={PASOS_VEHICULOS.length - 1}
+              lectura={filtro.min === 1 ? 'sin mínimo' : `${filtro.min} vehículos como mínimo`}
+              onCambiar={(i) => cambiarMinimo(PASOS_VEHICULOS[i]!)}
+            />
 
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between gap-3 text-body-sm">
-                <label htmlFor={idMax}>Máximo de tamaño</label>
-                <span className="font-mono tabular-nums text-asfalto">
-                  {umbralMax === null ? 'Sin máximo' : umbralMax}
-                </span>
-              </div>
-              <input
-                id={idMax}
-                type="range"
-                min={0}
-                max={PASOS_MAXIMO.length - 1}
-                step={1}
-                value={indiceDeMaximo(umbralMax)}
-                onChange={(e) => {
-                  const i = Number(e.target.value);
-                  onCambiarUmbralMax(PASOS_MAXIMO[i] ?? null);
-                }}
-                aria-valuetext={umbralMax === null ? 'sin máximo' : `${umbralMax} como máximo`}
-                className="w-full accent-atencion"
-              />
-            </div>
+            <Deslizable
+              id={idMax}
+              etiqueta="Máximo de vehículos"
+              valor={filtro.max === null ? 'Sin máximo' : nf.format(filtro.max)}
+              indice={filtro.max === null ? 0 : indiceMasCercano(PASOS_MAXIMO, filtro.max, 1)}
+              ultimo={PASOS_MAXIMO.length - 1}
+              lectura={filtro.max === null ? 'sin máximo' : `${filtro.max} vehículos como máximo`}
+              onCambiar={(i) => cambiarMaximo(PASOS_MAXIMO[i] ?? null)}
+            />
 
-            <label htmlFor={idSinDato} className="flex items-center gap-2 text-body-sm">
-              <input
-                id={idSinDato}
-                type="checkbox"
-                checked={incluirSinDato}
-                onChange={(e) => onCambiarIncluirSinDato(e.target.checked)}
-                className="size-4 accent-atencion"
-              />
-              Incluir sin dato de tamaño vigente
-            </label>
+            <CompanyListHeader orden={orden} onCambiarOrden={onCambiarOrden} />
           </div>
         </Desplegable>
       </div>
@@ -226,13 +211,51 @@ export function CompanyPanel({
         empresas={visibles}
         mensajeVacio={
           empresas.length === 0
-            ? incluirSinDato
-              ? 'Ninguna empresa cumple los filtros en este ámbito.'
-              : `Ninguna empresa cumple el filtro con dato vigente. Prueba a incluir las que no tienen dato de tamaño.`
+            ? 'Ninguna empresa de este ámbito entra en el filtro de vehículos. Ajústalo en «Filtros y orden».'
             : `Sin resultados para «${diferida.trim()}».`
         }
       />
     </>
+  );
+}
+
+/** Deslizable por paradas, con su etiqueta y el valor elegido a la vista. */
+function Deslizable({
+  id,
+  etiqueta,
+  valor,
+  indice,
+  ultimo,
+  lectura,
+  onCambiar,
+}: {
+  id: string;
+  etiqueta: string;
+  valor: string;
+  indice: number;
+  ultimo: number;
+  /** Lo que oye un lector de pantalla en vez del índice de la parada. */
+  lectura: string;
+  onCambiar: (indice: number) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center justify-between gap-3 text-body-sm">
+        <label htmlFor={id}>{etiqueta}</label>
+        <span className="font-mono tabular-nums text-asfalto">{valor}</span>
+      </div>
+      <input
+        id={id}
+        type="range"
+        min={0}
+        max={ultimo}
+        step={1}
+        value={indice}
+        onChange={(e) => onCambiar(Number(e.target.value))}
+        aria-valuetext={lectura}
+        className="w-full accent-atencion"
+      />
+    </div>
   );
 }
 
@@ -312,7 +335,7 @@ function FacetsProvincia({
         <Chip key={f.cod} activo={activa === f.cod} onClick={() => onElegir?.(f.cod)}>
           {f.nombre}{' '}
           <Latido valor={f.cumplen} className="font-mono tabular-nums">
-            {f.cumplen}
+            {nf.format(f.cumplen)}
           </Latido>
         </Chip>
       ))}
@@ -322,7 +345,7 @@ function FacetsProvincia({
 
 /**
  * Chip con física (`Pulsable`): se eleva al apuntarlo y se hunde con resorte
- * al pulsarlo. El activo se enciende en ámbar — el acento del filtro activo.
+ * al pulsarlo. El activo se enciende en el acento del filtro activo.
  */
 function Chip({
   activo,

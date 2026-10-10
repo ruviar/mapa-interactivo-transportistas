@@ -22,8 +22,8 @@ interface Props {
 export function SearchBox({
   consulta,
   onCambiar,
-  placeholder = 'Buscar por nombre, NIF o localidad…',
-  etiqueta = 'Buscar empresa por nombre, NIF o localidad',
+  placeholder = 'Nombre, autorización o localidad…',
+  etiqueta = 'Buscar empresa por razón social, número de autorización o localidad',
 }: Props) {
   const id = useId();
 
