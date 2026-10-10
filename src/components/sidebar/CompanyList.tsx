@@ -1,89 +1,21 @@
-import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { List, type RowComponentProps } from 'react-window';
+import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 
 import type { Empresa } from '../../types/company';
 import { ALTO_FILA_EMPRESA, CompanyRow } from './CompanyRow';
 
-/** Alto de la fila del mensaje de "no hay nada que enseñar". */
-const ALTO_MENSAJE = 96;
-/** Alto de la cabecera hasta que se mide de verdad (un fotograma). */
-const ALTO_CABECERA_INICIAL = 120;
-
-interface DatosFila {
-  empresas: Empresa[];
-  cabecera: ReactNode;
-  mensajeVacio: string;
-  onAltoCabecera: (alto: number) => void;
-}
+/** Filas de más que se montan por encima y por debajo de lo visible. */
+const SOBRANTES = 12;
 
 /**
- * La cabecera (buscador, chips, filtros) como primera fila del listado: así
- * sube con las empresas al hacer scroll en vez de quedarse fija comiéndose
- * media hoja. Su alto no es fijo —el desplegable se abre, los chips saltan de
- * línea—, así que se mide y se le comunica a la lista.
- */
-function FilaCabecera({
-  style,
-  children,
-  onAlto,
-}: {
-  style: CSSProperties;
-  children: ReactNode;
-  onAlto: (alto: number) => void;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const medir = () => onAlto(el.offsetHeight);
-    medir();
-    const observador = new ResizeObserver(medir);
-    observador.observe(el);
-    return () => observador.disconnect();
-  }, [onAlto]);
-
-  return (
-    <div style={style}>
-      <div ref={ref}>{children}</div>
-    </div>
-  );
-}
-
-function Fila({
-  index,
-  style,
-  empresas,
-  cabecera,
-  mensajeVacio,
-  onAltoCabecera,
-}: RowComponentProps<DatosFila>) {
-  if (index === 0) {
-    return (
-      <FilaCabecera style={style} onAlto={onAltoCabecera}>
-        {cabecera}
-      </FilaCabecera>
-    );
-  }
-
-  if (empresas.length === 0) {
-    return (
-      <p style={style} className="px-4 py-6 text-body-sm text-asfalto" role="status">
-        {mensajeVacio}
-      </p>
-    );
-  }
-
-  return <CompanyRow empresa={empresas[index - 1]!} style={style} />;
-}
-
-/**
- * Listado virtualizado: una provincia grande puede traer miles de filas y solo
- * se montan las visibles. La fila 0 es la cabecera de controles.
+ * Listado virtualizado con la cabecera de controles (buscador, chips, filtros)
+ * dentro del mismo scroll: sube con las empresas en vez de quedarse fija.
  *
- * También sin empresas se usa la lista (cabecera + una fila de mensaje): si la
- * cabecera cambiara de rama al quedarse la búsqueda sin resultados, el
- * buscador se remontaría y perdería el foco a mitad de palabra.
+ * Es un único contenedor de scroll nativo: la cabecera va en flujo normal y,
+ * debajo, una caja con el alto exacto de todas las filas (son de alto fijo) en
+ * la que solo se montan las visibles. La virtualización es propia a propósito:
+ * la de `react-window` no admite contenido en flujo dentro de su scroll, y
+ * meter la cabecera como fila de alto variable le hacía estimar —y cambiar
+ * sobre la marcha— el alto total, lo que cortaba el gesto de scroll.
  */
 export function CompanyList({
   empresas,
@@ -96,20 +28,68 @@ export function CompanyList({
   /** Por qué no hay nada que enseñar: no es lo mismo un filtro estrecho que una búsqueda sin coincidencias. */
   mensajeVacio: string;
 }) {
-  const [altoCabecera, setAltoCabecera] = useState(ALTO_CABECERA_INICIAL);
-  const vacio = empresas.length === 0;
+  const contenedorRef = useRef<HTMLDivElement>(null);
+  const cabeceraRef = useRef<HTMLDivElement>(null);
+  const [rango, setRango] = useState({ desde: 0, hasta: 24 });
+  const total = empresas.length;
+
+  const recalcular = useCallback(() => {
+    const contenedor = contenedorRef.current;
+    const altoCabecera = cabeceraRef.current?.offsetHeight ?? 0;
+    if (!contenedor) return;
+
+    // Posición del borde superior visible dentro de la caja de filas.
+    const arriba = contenedor.scrollTop - altoCabecera;
+    const desde = Math.max(0, Math.floor(arriba / ALTO_FILA_EMPRESA) - SOBRANTES);
+    const hasta = Math.min(
+      total,
+      Math.ceil((arriba + contenedor.clientHeight) / ALTO_FILA_EMPRESA) + SOBRANTES,
+    );
+    // Solo se repinta cuando cambia qué filas tocan, no en cada píxel.
+    setRango((r) => (r.desde === desde && r.hasta === hasta ? r : { desde, hasta }));
+  }, [total]);
+
+  // El rango depende del alto del panel y del de la cabecera (el desplegable
+  // de filtros se abre, los chips saltan de línea): se vigilan los dos.
+  useLayoutEffect(() => {
+    recalcular();
+    const observador = new ResizeObserver(recalcular);
+    if (contenedorRef.current) observador.observe(contenedorRef.current);
+    if (cabeceraRef.current) observador.observe(cabeceraRef.current);
+    return () => observador.disconnect();
+  }, [recalcular]);
 
   return (
-    <List
+    <div
+      ref={contenedorRef}
+      onScroll={recalcular}
       // `overscroll-contain`: al llegar al final del listado dentro de la hoja,
       // el gesto se queda aquí y no arrastra la página por debajo.
-      className="h-full overscroll-contain"
-      rowComponent={Fila}
-      rowCount={1 + (vacio ? 1 : empresas.length)}
-      rowHeight={(index) =>
-        index === 0 ? altoCabecera : vacio ? ALTO_MENSAJE : ALTO_FILA_EMPRESA
-      }
-      rowProps={{ empresas, cabecera, mensajeVacio, onAltoCabecera: setAltoCabecera }}
-    />
+      className="h-full overflow-y-auto overscroll-contain"
+    >
+      <div ref={cabeceraRef}>{cabecera}</div>
+
+      {total === 0 ? (
+        <p className="px-4 py-6 text-body-sm text-asfalto" role="status">
+          {mensajeVacio}
+        </p>
+      ) : (
+        <div className="relative" style={{ height: total * ALTO_FILA_EMPRESA }}>
+          {empresas.slice(rango.desde, rango.hasta).map((empresa, i) => (
+            <CompanyRow
+              key={empresa.autorizacion}
+              empresa={empresa}
+              style={{
+                position: 'absolute',
+                top: (rango.desde + i) * ALTO_FILA_EMPRESA,
+                left: 0,
+                right: 0,
+                height: ALTO_FILA_EMPRESA,
+              }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
