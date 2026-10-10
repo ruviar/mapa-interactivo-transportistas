@@ -54,7 +54,10 @@ export function RegionList({
   }, [regiones, quieto]);
 
   return (
-    <ul ref={listaRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+    // Sin scroll propio: el scroll lo lleva el contenedor de `Sidebar`, que
+    // también arrastra el buscador. Un segundo contenedor de scroll anidado
+    // con `overscroll-contain` se tragaba el gesto y la lista no se movía.
+    <ul ref={listaRef}>
       {regiones.map((region) => (
         <li key={region.cod}>
           <button
