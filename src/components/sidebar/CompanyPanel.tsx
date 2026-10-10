@@ -117,7 +117,9 @@ export function CompanyPanel({
   const cambiarMaximo = (max: number | null) =>
     onCambiarFiltro({ min: max !== null && max < filtro.min ? max : filtro.min, max });
 
-  return (
+  // Los controles son la primera fila del listado (ver `CompanyList`): suben
+  // con las empresas al hacer scroll en vez de quedarse fijos encima.
+  const cabecera = (
     <>
       <SearchBox
         consulta={consulta}
@@ -206,16 +208,19 @@ export function CompanyPanel({
           </div>
         </Desplegable>
       </div>
-
-      <CompanyList
-        empresas={visibles}
-        mensajeVacio={
-          empresas.length === 0
-            ? 'Ninguna empresa de este ámbito entra en el filtro de vehículos. Ajústalo en «Filtros y orden».'
-            : `Sin resultados para «${diferida.trim()}».`
-        }
-      />
     </>
+  );
+
+  return (
+    <CompanyList
+      empresas={visibles}
+      cabecera={cabecera}
+      mensajeVacio={
+        empresas.length === 0
+          ? 'Ninguna empresa de este ámbito entra en el filtro de vehículos. Ajústalo en «Filtros y orden».'
+          : `Sin resultados para «${diferida.trim()}».`
+      }
+    />
   );
 }
 

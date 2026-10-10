@@ -198,7 +198,18 @@ export function Sidebar({
               onCambiarFacet={vista.nivel === 'ccaa' ? onCambiarFacet : undefined}
             />
           ) : (
-            <>
+            // Sin búsqueda, el buscador sube con la lista de comunidades al
+            // hacer scroll (un solo contenedor con scroll). Buscando, se queda
+            // fijo sobre los resultados: es con lo que se está trabajando. Es
+            // el mismo `div` en los dos casos —solo cambia la clase— para que
+            // el buscador no se remonte y pierda el foco al teclear.
+            <div
+              className={
+                buscandoGlobal
+                  ? 'flex min-h-0 flex-1 flex-col'
+                  : 'min-h-0 flex-1 overflow-y-auto overscroll-contain'
+              }
+            >
               <SearchBox
                 consulta={consultaGlobal}
                 onCambiar={onCambiarConsultaGlobal}
@@ -222,7 +233,7 @@ export function Sidebar({
                   <RegionList regiones={regiones} onSeleccionar={onSeleccionarRegion} />
                 </>
               )}
-            </>
+            </div>
           )}
         </div>
       </div>
