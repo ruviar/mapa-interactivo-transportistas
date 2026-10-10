@@ -100,7 +100,7 @@ test('multiclave: a igual nº de vehículos, la fecha desempata', () => {
   assert.deepEqual(nombres([vieja, nueva], orden), ['ZZZ NUEVA SL', 'AAA VIEJA SL']);
 });
 
-test('sin claves: cae al alfabético por nombre (el orden inicial de la herramienta)', () => {
+test('sin claves: cae al alfabético por nombre', () => {
   assert.deepEqual(
     nombres([zaragoza, almeria, sinLocalidad], []),
     ['ACARREOS ALFA SL', 'MUDANZAS MEDIA SL', 'TRANS ZETA SL'],

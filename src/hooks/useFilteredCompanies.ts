@@ -8,13 +8,11 @@ import { comparadorDe, type Orden } from '../utils/ordenacion';
 export type { Orden };
 
 /**
- * Alfabético por defecto: es como se busca una empresa en un listado. El
- * ranking por flota está a un clic en el selector de orden.
- *
- * Sin claves: `comparadorDe` cae solo al alfabético por nombre, que es justo
- * el arranque que se quiere.
+ * De mayor a menor flota por defecto: con el nº de vehículos real del
+ * registro, el ranking es lo primero que se quiere ver. A igualdad de
+ * vehículos desempata el alfabético (lo trae `comparadorDe` de serie).
  */
-export const ORDEN_INICIAL: Orden = [];
+export const ORDEN_INICIAL: Orden = [{ criterio: 'vehiculos', sentido: 'desc' }];
 
 /**
  * Qué provincias entran en el listado: una sola (vista de provincia) o todas
